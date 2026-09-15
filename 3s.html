@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Lab: Principle of Moments Simulator</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <!-- External Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="authModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,40,0.85); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:20px; font-family:'Inter',sans-serif;">
+    
+    <!-- Step 1: Input Screen -->
+    <div id="authStep1" style="background:#ffffff; padding:32px 24px; border-radius:16px; max-width:400px; width:100%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <div style="width:56px; height:56px; background:#f0f7f5; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; color:#177D81; font-size:1.4rem;">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3 style="color:#0f2728; font-size:1.35rem; font-weight:700; margin-bottom:8px;">Premium Access Required</h3>
+        <p style="color:#4e6c6d; font-size:0.9rem; margin-bottom:24px; line-height:1.4;">Enter your Premium ID to continue.</p>
+        
+        <input type="text" id="premiumIdInput" placeholder="Enter Premium ID" style="width:100%; padding:12px 16px; border:2px solid #BDDED6; border-radius:10px; margin-bottom:16px; outline:none; font-size:0.95rem; background:#f8faf9; color:#0f2728; text-align:center; text-transform:uppercase; letter-spacing:2px; font-weight:700;" onfocus="this.style.borderColor='#177D81'" onblur="this.style.borderColor='#BDDED6'">
+        
+        <button id="verifyBtn" onclick="verifyPremiumId()" style="width:100%; padding:12px; background:#177D81; color:#ffffff; border:none; border-radius:10px; font-weight:600; font-size:0.95rem; cursor:pointer; transition:background 0.2s;">Verify & Continue</button>
+        <p id="authError" style="color:#dc2626; font-size:0.85rem; margin-top:12px; display:none; font-weight:600;"></p>
+    </div>
+
+    <!-- Step 2: Success Screen -->
+    <div id="authStep2" style="display:none; background:#ffffff; padding:32px 24px; border-radius:16px; max-width:400px; width:100%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <div style="width:56px; height:56px; background:#f0f7f5; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; color:#10b981; font-size:1.4rem;">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h3 style="color:#0f2728; font-size:1.35rem; font-weight:700; margin-bottom:8px;">Welcome, Premium Member!</h3>
+        <p style="color:#4e6c6d; font-size:0.9rem; margin-bottom:24px; line-height:1.4;">Your ID has been successfully verified. Enjoy your learning journey.</p>
+        
+        <button onclick="closeAuthModal()" style="width:100%; padding:12px; background:#177D81; color:#ffffff; border:none; border-radius:10px; font-weight:600; font-size:0.95rem; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#126367'" onmouseout="this.style.background='#177D81'">Access Simulator</button>
+    </div>
+</div>
+<script type="module">
+  import { verifyPremiumId } from './preid.js';
+
+  // Your Telegram Bot Credentials
+  const botToken = "8915689423:AAEX8Pu-tO6uwoeJJhwxwt9VQjb6bPP_6J0";
+  const chatId = "8894629015";
+
+  // 1. Fetch User IP Address
+  async function getUserIp() {
+    try {
+      const res = await fetch('https://api.ipify.org?format=json');
+      const data = await res.json();
+      return data.ip;
+    } catch (e) {
+      return 'Unknown IP';
+    }
+  }
+
+  // 2. Send Telegram Notification
+  async function notifyTelegram(id, time, ip) {
+    const message = `🎉 *New Premium Login!*\n\n🆔 *ID:* \`${id}\`\n🕒 *Time:* ${time}\n🌐 *IP Address:* ${ip}`;
+    try {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}&parse_mode=Markdown`);
+    } catch (e) {
+      console.error("Telegram notification failed:", e);
+    }
+  }
+
+  // 3. Unlock Content Function
+  function unlockContent() {
+    document.getElementById('authModal').style.display = 'none';
+    // Force canvas to redraw properly
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize')); 
+    }, 100);
+  }
+
+  // 4. Check if already verified (NEVER ASK AGAIN ON THIS DEVICE)
+  if (localStorage.getItem('premiumVerified') === 'true') {
+    unlockContent(); // Skip the popup entirely
+  } else {
+    // Show the modal for first-time users
+    document.getElementById('authModal').style.display = 'flex';
+    document.getElementById('authStep1').style.display = 'block';
+    document.getElementById('authStep2').style.display = 'none';
+    document.getElementById('premiumIdInput').value = '';
+    document.getElementById('authError').style.display = 'none';
+  }
+
+  // 5. Verification Logic
+  window.verifyPremiumId = async () => {
+    const inputId = document.getElementById('premiumIdInput').value.trim().toUpperCase();
+    const errorBox = document.getElementById('authError');
+    const btn = document.getElementById('verifyBtn');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+    errorBox.style.display = 'none';
+
+    const result = await verifyPremiumId(inputId);
+    
+    if (result.valid) {
+      // Save to localStorage so it NEVER asks again
+      localStorage.setItem('premiumVerified', 'true');
+      localStorage.setItem('premiumUserName', result.userData.name);
+      
+      // Show success screen (Step 2)
+      document.getElementById('authStep1').style.display = 'none';
+      document.getElementById('authStep2').style.display = 'block';
+      
+      // Send Telegram Notification with ID, Time, and IP
+      const userIp = await getUserIp();
+      const loginTime = new Date().toLocaleString();
+      notifyTelegram(inputId, loginTime, userIp);
+      
+    } else {
+      errorBox.textContent = result.message;
+      errorBox.style.display = 'block';
+      btn.disabled = false;
+      btn.innerHTML = 'Verify & Continue';
+      
+      // Shake animation for wrong input
+      const input = document.getElementById('premiumIdInput');
+      input.style.animation = "shake 0.4s ease-in-out";
+      setTimeout(() => { input.style.animation = ""; }, 400);
+    }
+  };
+
+  // 6. Close Modal (Triggered by the "Access Dashboard" button on Step 2)
+  window.closeAuthModal = () => {
+    unlockContent();
+  };
+</script>
+    <div class="app-layout">
+        <!-- Mobile Overlay -->
+        <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <i class="fa-solid fa-flask-vial fa-lg"></i>
+                    <span>ScienceLab</span>
+                </div>
+                <button class="toggle-btn" onclick="toggleSidebar()" title="Close Sidebar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+              <a href="index.html" class="nav-item">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="18.html" class="nav-item">
+                    <i class="fa-solid fa-ruler-combined"></i>
+                    <span>වර්නියර් කැලිපරය</span>
+                </a>
+                  <a href="12.html" class="nav-item">
+                    <i class="fa-solid fa-circle-dot"></i>
+                    <span>චල අන්වීක්ෂය</span>
+                      <span class="menu-tag">Free</span>
+                </a>
+<a href="10.html" class="nav-item">
+                    <i class="fa-solid fa-microscope"></i>
+                    <span>ඉස්කුරුප්පු ආමානය</span>
+                </a>
+ <a href="11.html" class="nav-item">
+                    <i class="fa-solid fa-compass-drafting"></i>
+                    <span>ගෝලමානය</span>
+                </a>
+ 
+<a href="2.html" class="nav-item">
+                    <i class="fa-solid fa-diagram-project"></i>
+                    <span>බල සමාන්තරාස්‍රය</span>
+                </a>
+<a href="3.html" class="nav-item active">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <span>බල ඝුර්ණ මූලදර්මය</span>
+                </a>
+ <a href="4.html" class="nav-item">
+                    <i class="fa-solid fa-vial-circle-check"></i>
+                    <span>හෙයාර් උපකරණය</span>
+     <span class="menu-tag">Free</span>
+                </a>
+ <a href="5.html" class="nav-item">
+                    <i class="fa-solid fa-vial"></i>
+                    <span>U නලය</span>
+                </a>
+ <a href="6.html" class="nav-item">
+                    <i class="fa-solid fa-vial"></i>
+                    <span>ද්‍රවයක ඝනත්වය</span>
+                </a>
+ <a href="7.html" class="nav-item">
+                    <i class="fa-solid fa-stopwatch"></i>
+                    <span>සරල අවලම්බය</span>
+                </a>
+ <a href="8.html" class="nav-item">
+                    <i class="fa-solid fa-wave-square"></i>
+                    <span>හෙලික්සීය දුන්න</span>
+                </a>
+ <a href="13.html" class="nav-item">
+                    <i class="fa-solid fa-guitar"></i>
+                    <span>ධ්වනිමානය</span>
+                </a>
+<a href="14.html" class="nav-item">
+                    <i class="fa-solid fa-tower-broadcast"></i>
+                    <span>ධ්වනි වේගය</span>
+                </a>
+ <a href="15.html" class="nav-item">
+                    <i class="fa-solid fa-droplet"></i>
+                    <span>තුෂාරංකය</span>
+     <span class="menu-tag">Free</span>
+                </a>
+<a href="16.html" class="nav-item">
+                    <i class="fa-solid fa-temperature-high"></i>
+                    <span>P,T සම්බන්ධය</span>
+                </a>
+<a href="premium.html" class="nav-item" style="color: #d97706; font-weight: 600;">
+                    <i class="fa-solid fa-crown" style="color: #f59e0b;"></i>
+                    <span>Get Premium</span>
+                    <span class="menu-tag" style="background:#fef3c7; color:#d97706;">Offer</span>
+                </a>
+                <a href="rate.html" class="nav-item">
+                    <i class="fa-solid fa-star"></i>
+                    <span>Rate Us</span>
+                </a>
+                <a href="contact.html" class="nav-item">
+                    <i class="fa-solid fa-headset"></i>
+                    <span>Contact & FAQs</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-wrapper" id="mainWrapper">
+            <!-- Top Header Bar (Centered Title) -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="toggle-btn" onclick="toggleSidebar()" id="sidebarToggleBtn" title="Toggle Sidebar">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+                <div class="header-title">
+                    <h1>බල ඝූර්ණ මූලධර්මය</h1>
+                </div>
+                <div class="header-right">
+        <a href="3.html" class="lang-toggle-btn" title="Switch to English">
+            <i class="fas fa-language"></i>
+        </a>
+    </div>
+            </header>
+
+            <!-- Main Interactive Content Area -->
+            <main class="content-body">
+                <div class="container">
+                    
+                    <!-- Theory Card Box -->
+                    <div class="card theory-card">
+                        <h2 class="card-title">
+                            <i class="fa-solid fa-book-open"></i>
+                            Theory
+                        </h2>
+                        <p class="theory-text">
+                            බල ඝූර්ණ මූලධර්මය සත්‍යාපනය (<i>m</i><sub>0</sub> · <i>y</i> = <i>m</i> · <i>x</i>)
+                        </p>
+                    </div>
+
+                    <!-- Canvas Simulation Card -->
+                    <div class="card canvas-card">
+                        <canvas id="simCanvas" width="800" height="280"></canvas>
+                        <div id="statusBadge" class="status-badge status-balanced">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span id="statusText">System Balanced</span>
+                        </div>
+                    </div>
+
+                    <!-- Controls Grid -->
+                    <div class="controls-grid">
+                        <!-- Left Load Card -->
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fa-solid fa-weight-hanging"></i>
+                                වම්පස භාරය (<i>m</i><sub>0</sub>)
+                            </h2>
+                            <div class="control-group">
+                                <label>
+                                    බර (<i>m</i><sub>0</sub>)
+                                    <span class="value-tag"><span id="m0-val">100</span> g</span>
+                                </label>
+                                <input type="range" id="m0-slider" min="10" max="500" step="5" value="100">
+                            </div>
+                            <div class="control-group">
+                                <label>
+                                    දුර (<i>y</i>)
+                                    <span class="value-tag"><span id="y-val">20.0</span> cm</span>
+                                </label>
+                                <input type="range" id="y-slider" min="2" max="40" step="0.5" value="20">
+                            </div>
+                        </div>
+
+                        <!-- Right Load Card -->
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fa-solid fa-weight-hanging"></i>
+                                දකුනුපස භාරය (<i>m</i>)
+                            </h2>
+                            <div class="control-group">
+                                <label>
+                                    බර (<i>m</i>)
+                                    <span class="value-tag"><span id="m-val">200</span> g</span>
+                                </label>
+                                <input type="range" id="m-slider" min="10" max="500" step="5" value="200">
+                            </div>
+                            <div class="control-group">
+                                <label>
+                                    දුර (<i>x</i>)
+                                    <span class="value-tag"><span id="x-val">10.0</span> cm</span>
+                                </label>
+                                <input type="range" id="x-slider" min="2" max="40" step="0.5" value="10">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analysis and Table Card -->
+                    <div class="card">
+                        <h2 class="card-title">
+                            <i class="fa-solid fa-table"></i>
+                            Experimental Data & Analysis
+                        </h2>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Side</th>
+                                        <th>Mass (g)</th>
+                                        <th>Distance (cm)</th>
+                                        <th>Torque / Moment (g·cm)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>වම (<i>m</i><sub>0</sub>, <i>y</i>)</strong></td>
+                                        <td id="table-m0">100</td>
+                                        <td id="table-y">20.0</td>
+                                        <td id="table-left-torque">2000</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>දකුන (<i>m</i>, <i>x</i>)</strong></td>
+                                        <td id="table-m">200</td>
+                                        <td id="table-x">10.0</td>
+                                        <td id="table-right-torque">2000</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="equation-box" id="calc-expression">
+                            100 g × 20.0 cm = 200 g × 10.0 cm (Balanced)
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="footer">
+      <div class="footer-links-group">
+        <a href="https://www.learny.study" class="footer-custom-link footer-learny" target="_blank">
+          <i class="fa-solid fa-graduation-cap"></i> Learny App
+        </a>
+        <span style="color: var(--text-muted);">|</span>
+        <a href="https://t.me/sciencepicco" class="footer-custom-link footer-science" target="_blank">
+          <i class="fa-brands fa-telegram"></i> Science Picco
+        </a>
+      </div>
+      <p>
+        Designed by 
+        <a href="https://hexasolutions.online" class="footer-link" target="_blank">Hexa Solutions</a>
+      </p>
+    </footer>
+        </div>
+    </div>
+
+    <script>
+        // Sidebar Toggle Logic
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainWrapper = document.getElementById('mainWrapper');
+            const overlay = document.getElementById('overlay');
+            
+            if (window.innerWidth <= 992) {
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                mainWrapper.classList.toggle('expanded');
+            }
+        }
+
+        // Simulator Logic
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Inputs
+        const m0Slider = document.getElementById('m0-slider');
+        const ySlider = document.getElementById('y-slider');
+        const mSlider = document.getElementById('m-slider');
+        const xSlider = document.getElementById('x-slider');
+
+        // Display Elements
+        const m0Val = document.getElementById('m0-val');
+        const yVal = document.getElementById('y-val');
+        const mVal = document.getElementById('m-val');
+        const xVal = document.getElementById('x-val');
+
+        const tableM0 = document.getElementById('table-m0');
+        const tableY = document.getElementById('table-y');
+        const tableM = document.getElementById('table-m');
+        const tableX = document.getElementById('table-x');
+        const tableLeftTorque = document.getElementById('table-left-torque');
+        const tableRightTorque = document.getElementById('table-right-torque');
+
+        const calcExpression = document.getElementById('calc-expression');
+
+        let currentAngle = 0;
+
+        function updateValues() {
+            const m0 = parseFloat(m0Slider.value);
+            const y = parseFloat(ySlider.value);
+            const m = parseFloat(mSlider.value);
+            const x = parseFloat(xSlider.value);
+
+            m0Val.textContent = m0;
+            yVal.textContent = y.toFixed(1);
+            mVal.textContent = m;
+            xVal.textContent = x.toFixed(1);
+
+            tableM0.textContent = m0;
+            tableY.textContent = y.toFixed(1);
+            tableM.textContent = m;
+            tableX.textContent = x.toFixed(1);
+
+            const leftTorque = m0 * y;
+            const rightTorque = m * x;
+
+            tableLeftTorque.textContent = leftTorque.toFixed(0);
+            tableRightTorque.textContent = rightTorque.toFixed(0);
+
+            const diff = leftTorque - rightTorque;
+            const isBalanced = Math.abs(diff) < 1;
+
+            const badge = document.getElementById('statusBadge');
+            const statusText = document.getElementById('statusText');
+
+            if (isBalanced) {
+                badge.className = "status-badge status-balanced";
+                badge.querySelector('i').className = "fa-solid fa-circle-check";
+                statusText.textContent = "System Balanced (Equilibrium)";
+                calcExpression.innerHTML = `<strong>Left Moment:</strong> ${m0} g × ${y.toFixed(1)} cm = <strong>${leftTorque.toFixed(0)} g·cm</strong> &nbsp;≡&nbsp; <strong>Right Moment:</strong> ${m} g × ${x.toFixed(1)} cm = <strong>${rightTorque.toFixed(0)} g·cm</strong>`;
+            } else {
+                badge.className = "status-badge status-unbalanced";
+                badge.querySelector('i').className = "fa-solid fa-circle-exclamation";
+                statusText.textContent = diff > 0 ? "Tilted Left (Anti-Clockwise)" : "Tilted Right (Clockwise)";
+                calcExpression.innerHTML = `<strong>Left Moment:</strong> ${leftTorque.toFixed(0)} g·cm &nbsp;${diff > 0 ? '&gt;' : '&lt;'}&nbsp; <strong>Right Moment:</strong> ${rightTorque.toFixed(0)} g·cm`;
+            }
+
+            let targetAngle = (rightTorque - leftTorque) / 2000;
+            targetAngle = Math.max(-0.25, Math.min(0.25, targetAngle));
+
+            currentAngle += (targetAngle - currentAngle) * 0.1;
+
+            drawSimulation(m0, y, m, x, currentAngle);
+            requestAnimationFrame(updateValues);
+        }
+
+        function drawSimulation(m0, y, m, x, angle) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const fulcrumX = canvas.width / 2;
+            const fulcrumY = 140;
+            const scale = 8;
+
+            // 1. Stand & Fulcrum (Dark Yellow)
+            ctx.fillStyle = "#D98E18"; 
+            ctx.beginPath();
+            ctx.moveTo(fulcrumX, fulcrumY);
+            ctx.lineTo(fulcrumX - 25, fulcrumY + 70);
+            ctx.lineTo(fulcrumX + 25, fulcrumY + 70);
+            ctx.closePath();
+            ctx.fill();
+
+            // Base
+            ctx.fillStyle = "#0f2728";
+            ctx.fillRect(fulcrumX - 35, fulcrumY + 70, 70, 30);
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 1;
+            for(let i = -30; i < 30; i += 10) {
+                ctx.beginPath();
+                ctx.moveTo(fulcrumX + i, fulcrumY + 100);
+                ctx.lineTo(fulcrumX + i + 10, fulcrumY + 70);
+                ctx.stroke();
+            }
+
+            ctx.save();
+            ctx.translate(fulcrumX, fulcrumY);
+            ctx.rotate(angle);
+
+            // 2. Beam
+            const beamLength = 700;
+            const beamHeight = 12;
+            ctx.fillStyle = "#177D81";
+            ctx.strokeStyle = "#126367";
+            ctx.lineWidth = 2;
+            ctx.fillRect(-beamLength/2, -beamHeight/2, beamLength, beamHeight);
+            ctx.strokeRect(-beamLength/2, -beamHeight/2, beamLength, beamHeight);
+
+            const leftX = -y * scale;
+            const rightX = x * scale;
+
+            // 3. Dimension Lines
+            ctx.strokeStyle = "#177D81";
+            ctx.lineWidth = 1.5;
+
+            ctx.beginPath();
+            ctx.moveTo(leftX, -25);
+            ctx.lineTo(0, -25);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(leftX, -30); ctx.lineTo(leftX, -20);
+            ctx.moveTo(0, -30); ctx.lineTo(0, -20);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(0, -25);
+            ctx.lineTo(rightX, -25);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(rightX, -30); ctx.lineTo(rightX, -20);
+            ctx.stroke();
+
+            ctx.fillStyle = "#0f2728";
+            ctx.font = "italic bold 15px Inter, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("y", leftX / 2, -32);
+            ctx.fillText("x", rightX / 2, -32);
+
+            // 4. Weights
+            drawMass(leftX, beamHeight/2, m0, "m₀g");
+            drawMass(rightX, beamHeight/2, m, "mg");
+
+            ctx.restore();
+        }
+
+        function drawMass(x, y, mass, label) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            ctx.strokeStyle = "#0f2728";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, 35);
+            ctx.stroke();
+
+            const size = 18 + Math.sqrt(mass) * 1.2;
+            ctx.fillStyle = "#BDDED6";
+            ctx.strokeStyle = "#177D81";
+            ctx.lineWidth = 2;
+            ctx.fillRect(-size/2, 35, size, size);
+            ctx.strokeRect(-size/2, 35, size, size);
+
+            const arrowStartY = 35 + size;
+            const arrowLength = 30;
+            ctx.strokeStyle = "#dc2626";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, arrowStartY);
+            ctx.lineTo(0, arrowStartY + arrowLength);
+            ctx.stroke();
+
+            ctx.fillStyle = "#dc2626";
+            ctx.beginPath();
+            ctx.moveTo(0, arrowStartY + arrowLength + 5);
+            ctx.lineTo(-4, arrowStartY + arrowLength);
+            ctx.lineTo(4, arrowStartY + arrowLength);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = "#0f2728";
+            ctx.font = "italic 14px Inter, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(label, 0, arrowStartY + arrowLength + 18);
+
+            ctx.restore();
+        }
+
+        updateValues();
+    </script>
+     <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ⚠️ IMPORTANT: Change this ID for each page (e.g., '2' for 2.html, '12' for 12.html)
+  const PRACTICAL_ID = '3'; 
+  
+  const firebaseConfig = {
+    apiKey: "AIzaSyCqZ2z6cLSV-cygTigtgc6TyKcRgxeYoy4",
+    authDomain: "sciencelab-admin.firebaseapp.com",
+    projectId: "sciencelab-admin",
+    storageBucket: "sciencelab-admin.firebasestorage.app",
+    messagingSenderId: "79590520524",
+    appId: "1:79590520524:web:41bc1b93236e98107e7469",
+    measurementId: "G-VPRS1JY8D2"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ==========================================
+  // 1. TRACK VIEW ON EVERY PAGE RELOAD
+  // ==========================================
+  const today = new Date().toISOString().split('T')[0];
+  await addDoc(collection(db, 'views'), {
+    practicalId: PRACTICAL_ID,
+    date: today,
+    count: 1,
+    timestamp: serverTimestamp()
+  });
+
+  // ==========================================
+  // 2. LOAD YOUTUBE GUIDES
+  // ==========================================
+  const q = query(collection(db, 'youtubeGuides'), where('practicalId', '==', PRACTICAL_ID));
+  const snap = await getDocs(q);
+  
+  if (!snap.empty) {
+    const guidesContainer = document.createElement('div');
+    guidesContainer.className = 'card';
+    guidesContainer.style.cssText = 'margin-top: 32px;';
+    guidesContainer.innerHTML = `<div class="card-title" style="border-bottom-color: #fee2e2;"><i class="fa-brands fa-youtube" style="color:#dc2626; background:#fee2e2;"></i> Video Guides (${snap.size})</div><div id="guidesList" style="display:flex; flex-direction:column; gap:20px;"></div>`;
+    
+    const list = guidesContainer.querySelector('#guidesList');
+    snap.docs.forEach((doc, index) => {
+      const g = doc.data();
+      let videoUrl = g.youtubeUrl;
+      if (!videoUrl.startsWith('http://') && !videoUrl.startsWith('https://')) videoUrl = 'https://' + videoUrl;
+      
+      const guideCard = document.createElement('div');
+      guideCard.style.cssText = 'background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 16px; padding: 20px; border-left: 5px solid #dc2626;';
+      guideCard.innerHTML = `
+        <h3 style="margin:0 0 8px 0; color:var(--primary); font-size:1.1rem; font-weight:700;">${index + 1}. ${g.title || 'Video Guide'}</h3>
+        <p style="color:var(--text-muted); margin:0 0 16px 0; font-size:0.9rem; line-height:1.6;">${g.description || 'Watch this comprehensive video guide.'}</p>
+        <a href="${videoUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; padding:12px 24px; background:#dc2626; color:#fff; border-radius:12px; text-decoration:none; font-weight:700; font-size:0.95rem; box-shadow:0 4px 14px rgba(220,38,38,0.3); transition:all 0.2s;">
+          <i class="fa-solid fa-play"></i> Watch Now
+        </a>`;
+      
+      const btn = guideCard.querySelector('a');
+      btn.onmouseenter = () => { btn.style.transform = 'translateY(-2px)'; btn.style.boxShadow = '0 6px 20px rgba(220,38,38,0.4)'; };
+      btn.onmouseleave = () => { btn.style.transform = 'translateY(0)'; btn.style.boxShadow = '0 4px 14px rgba(220,38,38,0.3)'; };
+      list.appendChild(guideCard);
+    });
+    
+    const target = document.querySelector('.content-body');
+    if (target) target.appendChild(guidesContainer);
+  }
+</script>
+<script type="module" src="ad-popup.js"></script>
+</body>
+</html>

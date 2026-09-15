@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Lab: Relative Humidity Simulator</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <!-- External Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="authModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,40,0.85); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:20px; font-family:'Inter',sans-serif;">
+    
+    <!-- Step 1: Input Screen -->
+    <div id="authStep1" style="background:#ffffff; padding:32px 24px; border-radius:16px; max-width:400px; width:100%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <div style="width:56px; height:56px; background:#f0f7f5; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; color:#177D81; font-size:1.4rem;">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3 style="color:#0f2728; font-size:1.35rem; font-weight:700; margin-bottom:8px;">Premium Access Required</h3>
+        <p style="color:#4e6c6d; font-size:0.9rem; margin-bottom:24px; line-height:1.4;">Enter your Premium ID to continue.</p>
+        
+        <input type="text" id="premiumIdInput" placeholder="Enter Premium ID" style="width:100%; padding:12px 16px; border:2px solid #BDDED6; border-radius:10px; margin-bottom:16px; outline:none; font-size:0.95rem; background:#f8faf9; color:#0f2728; text-align:center; text-transform:uppercase; letter-spacing:2px; font-weight:700;" onfocus="this.style.borderColor='#177D81'" onblur="this.style.borderColor='#BDDED6'">
+        
+        <button id="verifyBtn" onclick="verifyPremiumId()" style="width:100%; padding:12px; background:#177D81; color:#ffffff; border:none; border-radius:10px; font-weight:600; font-size:0.95rem; cursor:pointer; transition:background 0.2s;">Verify & Continue</button>
+        <p id="authError" style="color:#dc2626; font-size:0.85rem; margin-top:12px; display:none; font-weight:600;"></p>
+    </div>
+
+    <!-- Step 2: Success Screen -->
+    <div id="authStep2" style="display:none; background:#ffffff; padding:32px 24px; border-radius:16px; max-width:400px; width:100%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <div style="width:56px; height:56px; background:#f0f7f5; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; color:#10b981; font-size:1.4rem;">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h3 style="color:#0f2728; font-size:1.35rem; font-weight:700; margin-bottom:8px;">Welcome, Premium Member!</h3>
+        <p style="color:#4e6c6d; font-size:0.9rem; margin-bottom:24px; line-height:1.4;">Your ID has been successfully verified. Enjoy your learning journey.</p>
+        
+        <button onclick="closeAuthModal()" style="width:100%; padding:12px; background:#177D81; color:#ffffff; border:none; border-radius:10px; font-weight:600; font-size:0.95rem; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#126367'" onmouseout="this.style.background='#177D81'">Access Simulator</button>
+    </div>
+</div>
+<script type="module">
+  import { verifyPremiumId } from './preid.js';
+
+  // Your Telegram Bot Credentials
+  const botToken = "8915689423:AAEX8Pu-tO6uwoeJJhwxwt9VQjb6bPP_6J0";
+  const chatId = "8894629015";
+
+  // 1. Fetch User IP Address
+  async function getUserIp() {
+    try {
+      const res = await fetch('https://api.ipify.org?format=json');
+      const data = await res.json();
+      return data.ip;
+    } catch (e) {
+      return 'Unknown IP';
+    }
+  }
+
+  // 2. Send Telegram Notification
+  async function notifyTelegram(id, time, ip) {
+    const message = `🎉 *New Premium Login!*\n\n🆔 *ID:* \`${id}\`\n🕒 *Time:* ${time}\n🌐 *IP Address:* ${ip}`;
+    try {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}&parse_mode=Markdown`);
+    } catch (e) {
+      console.error("Telegram notification failed:", e);
+    }
+  }
+
+  // 3. Unlock Content Function
+  function unlockContent() {
+    document.getElementById('authModal').style.display = 'none';
+    // Force canvas to redraw properly
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize')); 
+    }, 100);
+  }
+
+  // 4. Check if already verified (NEVER ASK AGAIN ON THIS DEVICE)
+  if (localStorage.getItem('premiumVerified') === 'true') {
+    unlockContent(); // Skip the popup entirely
+  } else {
+    // Show the modal for first-time users
+    document.getElementById('authModal').style.display = 'flex';
+    document.getElementById('authStep1').style.display = 'block';
+    document.getElementById('authStep2').style.display = 'none';
+    document.getElementById('premiumIdInput').value = '';
+    document.getElementById('authError').style.display = 'none';
+  }
+
+  // 5. Verification Logic
+  window.verifyPremiumId = async () => {
+    const inputId = document.getElementById('premiumIdInput').value.trim().toUpperCase();
+    const errorBox = document.getElementById('authError');
+    const btn = document.getElementById('verifyBtn');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+    errorBox.style.display = 'none';
+
+    const result = await verifyPremiumId(inputId);
+    
+    if (result.valid) {
+      // Save to localStorage so it NEVER asks again
+      localStorage.setItem('premiumVerified', 'true');
+      localStorage.setItem('premiumUserName', result.userData.name);
+      
+      // Show success screen (Step 2)
+      document.getElementById('authStep1').style.display = 'none';
+      document.getElementById('authStep2').style.display = 'block';
+      
+      // Send Telegram Notification with ID, Time, and IP
+      const userIp = await getUserIp();
+      const loginTime = new Date().toLocaleString();
+      notifyTelegram(inputId, loginTime, userIp);
+      
+    } else {
+      errorBox.textContent = result.message;
+      errorBox.style.display = 'block';
+      btn.disabled = false;
+      btn.innerHTML = 'Verify & Continue';
+      
+      // Shake animation for wrong input
+      const input = document.getElementById('premiumIdInput');
+      input.style.animation = "shake 0.4s ease-in-out";
+      setTimeout(() => { input.style.animation = ""; }, 400);
+    }
+  };
+
+  // 6. Close Modal (Triggered by the "Access Dashboard" button on Step 2)
+  window.closeAuthModal = () => {
+    unlockContent();
+  };
+</script>
+    <div class="app-layout">
+        <!-- Mobile Overlay -->
+        <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <i class="fa-solid fa-flask-vial fa-lg"></i>
+                    <span>ScienceLab</span>
+                </div>
+                <button class="toggle-btn" onclick="toggleSidebar()" title="Close Sidebar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <!-- Connected to 3.html -->
+               <a href="index.html" class="nav-item">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="18.html" class="nav-item">
+                    <i class="fa-solid fa-ruler-combined"></i>
+                    <span>වර්නියර් කැලිපරය</span>
+                </a>
+                  <a href="12.html" class="nav-item">
+                    <i class="fa-solid fa-circle-dot"></i>
+                    <span>චල අන්වීක්ෂය</span>
+                      <span class="menu-tag">Free</span>
+                </a>
+<a href="10.html" class="nav-item">
+                    <i class="fa-solid fa-microscope"></i>
+                    <span>ඉස්කුරුප්පු ආමානය</span>
+                </a>
+ <a href="11.html" class="nav-item">
+                    <i class="fa-solid fa-compass-drafting"></i>
+                    <span>ගෝලමානය</span>
+                </a>
+ 
+<a href="2.html" class="nav-item">
+                    <i class="fa-solid fa-diagram-project"></i>
+                    <span>බල සමාන්තරාස්‍රය</span>
+                </a>
+<a href="3.html" class="nav-item">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <span>බල ඝුර්ණ මූලදර්මය</span>
+                </a>
+ <a href="4.html" class="nav-item">
+                    <i class="fa-solid fa-vial-circle-check"></i>
+                    <span>හෙයාර් උපකරණය</span>
+     <span class="menu-tag">Free</span>
+                </a>
+ <a href="5.html" class="nav-item">
+                    <i class="fa-solid fa-vial"></i>
+                    <span>U නලය</span>
+                </a>
+ <a href="6.html" class="nav-item">
+                    <i class="fa-solid fa-vial"></i>
+                    <span>ද්‍රවයක ඝනත්වය</span>
+                </a>
+ <a href="7.html" class="nav-item">
+                    <i class="fa-solid fa-stopwatch"></i>
+                    <span>සරල අවලම්බය</span>
+                </a>
+ <a href="8.html" class="nav-item">
+                    <i class="fa-solid fa-wave-square"></i>
+                    <span>හෙලික්සීය දුන්න</span>
+                </a>
+ <a href="13.html" class="nav-item">
+                    <i class="fa-solid fa-guitar"></i>
+                    <span>ධ්වනිමානය</span>
+                </a>
+<a href="14.html" class="nav-item">
+                    <i class="fa-solid fa-tower-broadcast"></i>
+                    <span>ධ්වනි වේගය</span>
+                </a>
+ <a href="15.html" class="nav-item active">
+                    <i class="fa-solid fa-droplet"></i>
+                    <span>තුෂාරංකය</span>
+     <span class="menu-tag">Free</span>
+                </a>
+<a href="16.html" class="nav-item">
+                    <i class="fa-solid fa-temperature-high"></i>
+                    <span>P,T සම්බන්ධය</span>
+                </a>
+<a href="premium.html" class="nav-item" style="color: #d97706; font-weight: 600;">
+                    <i class="fa-solid fa-crown" style="color: #f59e0b;"></i>
+                    <span>Get Premium</span>
+                    <span class="menu-tag" style="background:#fef3c7; color:#d97706;">Offer</span>
+                </a>
+                <a href="rate.html" class="nav-item">
+                    <i class="fa-solid fa-star"></i>
+                    <span>Rate Us</span>
+                </a>
+                <a href="contact.html" class="nav-item">
+                    <i class="fa-solid fa-headset"></i>
+                    <span>Contact & FAQs</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-wrapper" id="mainWrapper">
+            <!-- Top Header Bar -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="toggle-btn" onclick="toggleSidebar()" id="sidebarToggleBtn" title="Toggle Sidebar">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+                <div class="header-title">
+                    <h1>සාපේක්ෂ ආර්ද්‍රතාවය සෙවීම</h1>
+                </div>
+                <div class="header-right">
+        <a href="10.html" class="lang-toggle-btn" title="Switch to English">
+            <i class="fas fa-language"></i>
+        </a>
+    </div>
+            </header>
+
+            <!-- Main Interactive Content Area -->
+            <main class="content-body">
+                <div class="container">
+                    
+                    <!-- Theory Card Box -->
+                    <div class="card theory-card">
+                        <h2 class="card-title">
+                            <i class="fa-solid fa-book-open"></i>
+                            Theory & Method
+                        </h2>
+                        <p class="theory-text">
+                            ඔප දැමූ කැලරිමීටරයක් ​​භාවිතයෙන් වාතයේ සාපේක්ෂ ආර්ද්‍රතාවය තීරණය කිරීම.
+                        </p>
+                        <div class="formula">
+                            සාපේක්ෂ ආර්ද්‍රතාවය = (p₀ / p) × 100%
+                        </div>
+                    </div>
+
+                    <!-- Canvas Simulation Card -->
+                    <div class="card canvas-card">
+                        <canvas id="simCanvas" width="800" height="280"></canvas>
+                        <div id="statusBadge" class="status-badge status-balanced">
+                            <i class="fa-solid fa-droplet"></i>
+                            <span id="statusText">Surface Clear (No Dew)</span>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Controls -->
+                    <div class="controls-grid">
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fa-solid fa-sliders"></i>
+                                Experiment Controls
+                            </h2>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                                <button class="btn" style="flex: 1; min-width: 120px;" onclick="addIce()">
+                                    <i class="fa-solid fa-cube"></i> කුඩා අයිස් එකතු කරන්න
+                                </button>
+                                <button class="btn" style="flex: 1; min-width: 120px;" onclick="addLargeIce()">
+                                    <i class="fa-solid fa-cubes"></i> විශාල අයිස් එකතු කරන්න
+                                </button>
+                                <button class="btn" style="flex: 1; min-width: 120px;" onclick="stir()">
+                                    <i class="fa-solid fa-rotate-right"></i> මන්තනය
+                                </button>
+                            </div>
+                            <button class="btn btn-secondary" onclick="resetSim()">
+                                <i class="fa-solid fa-rotate"></i> නැවත
+                            </button>
+                        </div>
+
+                        <!-- Readout Display -->
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fa-solid fa-temperature-half"></i>
+                                Real-Time Readings
+                            </h2>
+                            <div class="control-group">
+                                <label>
+                                    කැලරිමීටරයේ උෂ්: (θ₁)
+                                    <span class="value-tag"><span id="t1-val">27.0</span> °C</span>
+                                </label>
+                            </div>
+                            <div class="control-group">
+                                <label>
+                                    කාමර උෂ්: (θ<sub>R</sub>)
+                                    <span class="value-tag"><span id="t2-val">27.0</span> °C</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Readings and Calculation Section -->
+                    <div class="card">
+                        <h2 class="card-title">
+                            <i class="fa-solid fa-calculator"></i>
+                            Readings & Calculations Worksheet
+                        </h2>
+                        <form id="calcForm" onsubmit="calculateRH(event)">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Parameter</th>
+                                            <th>Symbol</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>කාමර උෂ්ණත්වය</td>
+                                            <td>θ<sub>R</sub></td>
+                                            <td><input type="number" id="inputTR" step="0.1" placeholder="e.g. 27.0" required></td>
+                                        </tr>
+                                        <tr>
+                                            <td>තුශාර තැන්පත් වු උෂ්ණත්වය</td>
+                                            <td>θ₁</td>
+                                            <td><input type="number" id="inputT1" step="0.1" placeholder="e.g. 18.0" required></td>
+                                        </tr>
+                                        <tr>
+                                            <td>තුශාර ඉවත් වූ උශ්නත්වය</td>
+                                            <td>θ₂</td>
+                                            <td><input type="number" id="inputT2" step="0.1" placeholder="e.g. 18.4" required></td>
+                                        </tr>
+                                        <tr>
+                                            <td>සාමාන්‍යය</td>
+                                            <td>(θ₁ + θ₂) / 2</td>
+                                            <td><input type="number" id="inputDP" step="0.1" placeholder="Mean" required></td>
+                                        </tr>
+                                        <tr>
+                                            <td>SVP at Dew Point</td>
+                                            <td>p₀ (mmHg)</td>
+                                            <td><input type="number" id="inputVP0" step="0.01" placeholder="From Table" required></td>
+                                        </tr>
+                                        <tr>
+                                            <td>SVP at Room Temp</td>
+                                            <td>p (mmHg)</td>
+                                            <td><input type="number" id="inputVPR" step="0.01" placeholder="From Table" required></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Calculated RH (%)</strong></td>
+                                            <td><strong>RH</strong></td>
+                                            <td><input type="number" id="inputRH" step="0.1" placeholder="Result %" required></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="submit" class="btn" style="margin-top: 15px;">
+                                <i class="fa-solid fa-check-double"></i> ගණනයන් තහවුරු කිරීම
+                            </button>
+                        </form>
+
+                        <div class="equation-box" id="calcResult" style="display:none; margin-top: 15px;"></div>
+                    </div>
+
+                    <!-- Reference Table -->
+                    <div class="card">
+                        <h2 class="card-title">
+                            <i class="fa-solid fa-table-list"></i>
+                            Saturated Vapour Pressure (SVP) Reference Data
+                        </h2>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Temp (°C)</th>
+                                        <th>SVP (mmHg)</th>
+                                        <th>Temp (°C)</th>
+                                        <th>SVP (mmHg)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vpTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+
+           <footer class="footer">
+      <div class="footer-links-group">
+        <a href="https://www.learny.study" class="footer-custom-link footer-learny" target="_blank">
+          <i class="fa-solid fa-graduation-cap"></i> Learny App
+        </a>
+        <span style="color: var(--text-muted);">|</span>
+        <a href="https://t.me/sciencepicco" class="footer-custom-link footer-science" target="_blank">
+          <i class="fa-brands fa-telegram"></i> Science Picco
+        </a>
+      </div>
+      <p>
+        Designed by 
+        <a href="https://hexasolutions.online" class="footer-link" target="_blank">Hexa Solutions</a>
+      </p>
+    </footer>
+        </div>
+    </div>
+
+    <script>
+        // Sidebar Toggle Functionality
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainWrapper = document.getElementById('mainWrapper');
+            const overlay = document.getElementById('overlay');
+            
+            if (window.innerWidth <= 992) {
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                mainWrapper.classList.toggle('expanded');
+            }
+        }
+
+        // --- Physics Simulation State ---
+        const roomTemp = 27.0;
+        const targetDewPoint = 18.2; 
+        let currentTemp = roomTemp;
+        let iceInWater = 0;
+        let stirFactor = 0;
+        let dewAmount = 0;
+
+        const svpData = {
+            14: 11.99, 15: 12.79, 16: 13.63, 17: 14.53, 18: 15.48, 
+            19: 16.48, 20: 17.54, 21: 18.65, 22: 19.83, 23: 21.07, 
+            24: 22.38, 25: 23.76, 26: 25.21, 27: 26.74, 28: 28.35, 
+            29: 30.04, 30: 31.82
+        };
+
+        // Populate SVP Table
+        const vpBody = document.getElementById('vpTableBody');
+        const temps = Object.keys(svpData).map(Number);
+        for(let i = 0; i < temps.length / 2; i++) {
+            let t1 = temps[i], t2 = temps[i + Math.ceil(temps.length / 2)];
+            let row = `<tr>
+                <td>${t1}</td><td>${svpData[t1]}</td>
+                <td>${t2 ? t2 : ''}</td><td>${t2 ? svpData[t2] : ''}</td>
+            </tr>`;
+            vpBody.innerHTML += row;
+        }
+
+        // Canvas Setup
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function updatePhysics() {
+            if (iceInWater > 0 && stirFactor > 0) {
+                currentTemp = Math.max(2.0, currentTemp - 0.04 * stirFactor);
+                iceInWater = Math.max(0, iceInWater - 0.01 * stirFactor);
+            } else if (iceInWater > 0) {
+                currentTemp = Math.max(2.0, currentTemp - 0.003);
+                iceInWater = Math.max(0, iceInWater - 0.002);
+            } else {
+                if (currentTemp < roomTemp) {
+                    currentTemp += 0.008;
+                }
+            }
+
+            if (currentTemp <= targetDewPoint) {
+                dewAmount = Math.min(1.0, dewAmount + (targetDewPoint - currentTemp + 0.1) * 0.02);
+            } else {
+                dewAmount = Math.max(0.0, dewAmount - 0.015);
+            }
+
+            if (stirFactor > 0) stirFactor -= 0.02;
+
+            document.getElementById('t1-val').textContent = currentTemp.toFixed(1);
+            document.getElementById('t2-val').textContent = roomTemp.toFixed(1);
+
+            const badge = document.getElementById('statusBadge');
+            const statusText = document.getElementById('statusText');
+            if (dewAmount > 0.1) {
+                badge.className = "status-badge status-unbalanced";
+                statusText.textContent = "Dew Formation Detected (Surface Tarnished)";
+            } else {
+                badge.className = "status-badge status-balanced";
+                statusText.textContent = "Surface Clear (Polished Shine)";
+            }
+
+            drawSimulation();
+            requestAnimationFrame(updatePhysics);
+        }
+
+        function drawSimulation() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Glass Shield (Divider)
+            ctx.fillStyle = "rgba(189, 222, 214, 0.3)";
+            ctx.fillRect(395, 30, 10, 220);
+            ctx.strokeStyle = "#BDDED6";
+            ctx.strokeRect(395, 30, 10, 220);
+
+            // Calorimeter 1 (Left - Active)
+            drawCalorimeter(180, 100, 130, 140, dewAmount, "Calorimeter 1 (Active)");
+            drawWaterAndIce(180, 100, 130, 140);
+            drawStirrer(210, 60, stirFactor > 0);
+            drawThermometer(270, 40, currentTemp);
+
+            // Calorimeter 2 (Right - Reference)
+            drawCalorimeter(480, 100, 130, 140, 0, "Calorimeter 2 (Ref)");
+            drawThermometer(570, 40, roomTemp);
+        }
+
+        function drawCalorimeter(x, y, w, h, dew, label) {
+            let grad = ctx.createLinearGradient(x, y, x + w, y);
+            if(dew > 0) {
+                let d = Math.min(dew, 1) * 0.6;
+                grad.addColorStop(0, `rgba(180, 190, 200, ${1 - d})`);
+                grad.addColorStop(0.5, `rgba(240, 240, 240, ${1 - d})`);
+                grad.addColorStop(1, `rgba(160, 170, 180, ${1 - d})`);
+            } else {
+                grad.addColorStop(0, "#177D81");
+                grad.addColorStop(0.3, "#f8faf9");
+                grad.addColorStop(0.5, "#BDDED6");
+                grad.addColorStop(1, "#126367");
+            }
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, [0, 0, 12, 12]);
+            ctx.fill();
+            ctx.strokeStyle = "#177D81";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            if(dew > 0.1) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(dew * 0.7, 0.85)})`;
+                ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+            }
+
+            ctx.fillStyle = "#0f2728";
+            ctx.font = "bold 13px Inter, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(label, x + w/2, y + h + 22);
+        }
+
+        function drawWaterAndIce(x, y, w, h) {
+            ctx.fillStyle = "rgba(189, 222, 214, 0.5)";
+            ctx.fillRect(x + 4, y + h/2, w - 8, h/2 - 4);
+
+            if (iceInWater > 0) {
+                ctx.fillStyle = "#ffffff";
+                ctx.strokeStyle = "#177D81";
+                let numBlocks = Math.min(Math.ceil(iceInWater), 6);
+                for(let i = 0; i < numBlocks; i++) {
+                    ctx.fillRect(x + 18 + (i * 15), y + h/2 - 6, 12, 10);
+                    ctx.strokeRect(x + 18 + (i * 15), y + h/2 - 6, 12, 10);
+                }
+            }
+        }
+
+        function drawThermometer(x, y, temp) {
+            ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+            ctx.fillRect(x, y, 12, 160);
+            ctx.strokeStyle = "#177D81";
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(x, y, 12, 160);
+
+            let height = ((temp) / 50) * 140;
+            ctx.fillStyle = "#D98E18";
+            ctx.fillRect(x + 3, y + 150 - height, 6, height);
+
+            ctx.beginPath();
+            ctx.arc(x + 6, y + 155, 8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawStirrer(x, y, active) {
+            ctx.strokeStyle = "#0f2728";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            let offsetY = active ? Math.sin(Date.now() / 80) * 6 : 0;
+            ctx.moveTo(x, y + offsetY);
+            ctx.lineTo(x, y + 140 + offsetY);
+            ctx.lineTo(x + 35, y + 140 + offsetY);
+            ctx.stroke();
+        }
+
+        function addIce() { iceInWater += 1.5; }
+        function addLargeIce() { iceInWater += 5.0; }
+        function stir() { stirFactor = 1.0; }
+        function resetSim() {
+            currentTemp = roomTemp;
+            iceInWater = 0;
+            stirFactor = 0;
+            dewAmount = 0;
+        }
+
+        function calculateRH(e) {
+            e.preventDefault();
+            let userTR = parseFloat(document.getElementById('inputTR').value);
+            let userT1 = parseFloat(document.getElementById('inputT1').value);
+            let userT2 = parseFloat(document.getElementById('inputT2').value);
+            let userDP = parseFloat(document.getElementById('inputDP').value);
+            let userVP0 = parseFloat(document.getElementById('inputVP0').value);
+            let userVPR = parseFloat(document.getElementById('inputVPR').value);
+            let userRH = parseFloat(document.getElementById('inputRH').value);
+
+            let calcMeanDP = (userT1 + userT2) / 2;
+            let expectedRH = (userVP0 / userVPR) * 100;
+
+            let resBox = document.getElementById('calcResult');
+            resBox.style.display = 'block';
+
+            if (Math.abs(userDP - calcMeanDP) <= 0.2 && Math.abs(userRH - expectedRH) <= 1.5) {
+                resBox.innerHTML = `<strong><i class="fa-solid fa-circle-check"></i> Calculation Correct!</strong><br>Calculated Relative Humidity: <strong>${userRH.toFixed(1)}%</strong>`;
+            } else {
+                resBox.innerHTML = `<strong><i class="fa-solid fa-circle-exclamation"></i> Check your values:</strong><br>Mean Dew Point should be ≈ ${calcMeanDP.toFixed(1)}°C.<br>RH Formula: (p₀ / p) × 100% ≈ ${expectedRH.toFixed(1)}%`;
+            }
+        }
+
+        updatePhysics();
+    </script>
+     <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ⚠️ IMPORTANT: Change this ID for each page (e.g., '2' for 2.html, '12' for 12.html)
+  const PRACTICAL_ID = '15'; 
+  
+  const firebaseConfig = {
+    apiKey: "AIzaSyCqZ2z6cLSV-cygTigtgc6TyKcRgxeYoy4",
+    authDomain: "sciencelab-admin.firebaseapp.com",
+    projectId: "sciencelab-admin",
+    storageBucket: "sciencelab-admin.firebasestorage.app",
+    messagingSenderId: "79590520524",
+    appId: "1:79590520524:web:41bc1b93236e98107e7469",
+    measurementId: "G-VPRS1JY8D2"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ==========================================
+  // 1. TRACK VIEW ON EVERY PAGE RELOAD
+  // ==========================================
+  const today = new Date().toISOString().split('T')[0];
+  await addDoc(collection(db, 'views'), {
+    practicalId: PRACTICAL_ID,
+    date: today,
+    count: 1,
+    timestamp: serverTimestamp()
+  });
+
+  // ==========================================
+  // 2. LOAD YOUTUBE GUIDES
+  // ==========================================
+  const q = query(collection(db, 'youtubeGuides'), where('practicalId', '==', PRACTICAL_ID));
+  const snap = await getDocs(q);
+  
+  if (!snap.empty) {
+    const guidesContainer = document.createElement('div');
+    guidesContainer.className = 'card';
+    guidesContainer.style.cssText = 'margin-top: 32px;';
+    guidesContainer.innerHTML = `<div class="card-title" style="border-bottom-color: #fee2e2;"><i class="fa-brands fa-youtube" style="color:#dc2626; background:#fee2e2;"></i> Video Guides (${snap.size})</div><div id="guidesList" style="display:flex; flex-direction:column; gap:20px;"></div>`;
+    
+    const list = guidesContainer.querySelector('#guidesList');
+    snap.docs.forEach((doc, index) => {
+      const g = doc.data();
+      let videoUrl = g.youtubeUrl;
+      if (!videoUrl.startsWith('http://') && !videoUrl.startsWith('https://')) videoUrl = 'https://' + videoUrl;
+      
+      const guideCard = document.createElement('div');
+      guideCard.style.cssText = 'background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 16px; padding: 20px; border-left: 5px solid #dc2626;';
+      guideCard.innerHTML = `
+        <h3 style="margin:0 0 8px 0; color:var(--primary); font-size:1.1rem; font-weight:700;">${index + 1}. ${g.title || 'Video Guide'}</h3>
+        <p style="color:var(--text-muted); margin:0 0 16px 0; font-size:0.9rem; line-height:1.6;">${g.description || 'Watch this comprehensive video guide.'}</p>
+        <a href="${videoUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; padding:12px 24px; background:#dc2626; color:#fff; border-radius:12px; text-decoration:none; font-weight:700; font-size:0.95rem; box-shadow:0 4px 14px rgba(220,38,38,0.3); transition:all 0.2s;">
+          <i class="fa-solid fa-play"></i> Watch Now
+        </a>`;
+      
+      const btn = guideCard.querySelector('a');
+      btn.onmouseenter = () => { btn.style.transform = 'translateY(-2px)'; btn.style.boxShadow = '0 6px 20px rgba(220,38,38,0.4)'; };
+      btn.onmouseleave = () => { btn.style.transform = 'translateY(0)'; btn.style.boxShadow = '0 4px 14px rgba(220,38,38,0.3)'; };
+      list.appendChild(guideCard);
+    });
+    
+    const target = document.querySelector('.content-body');
+    if (target) target.appendChild(guidesContainer);
+  }
+</script>
+<script type="module" src="ad-popup.js"></script>
+</body>
+</html>

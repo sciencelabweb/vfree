@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Lab: U-Tube Practical Simulator</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- External Shared Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="authModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,40,0.85); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:20px; font-family:'Inter',sans-serif;">
+    
+    <!-- Step 1: Input Screen -->
+    <div id="authStep1" style="background:#ffffff; padding:32px 24px; border-radius:16px; max-width:400px; width:100%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <div style="width:56px; height:56px; background:#f0f7f5; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; color:#177D81; font-size:1.4rem;">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3 style="color:#0f2728; font-size:1.35rem; font-weight:700; margin-bottom:8px;">Premium Access Required</h3>
+        <p style="color:#4e6c6d; font-size:0.9rem; margin-bottom:24px; line-height:1.4;">Enter your Premium ID to continue.</p>
+        
+        <input type="text" id="premiumIdInput" placeholder="Enter Premium ID" style="width:100%; padding:12px 16px; border:2px solid #BDDED6; border-radius:10px; margin-bottom:16px; outline:none; font-size:0.95rem; background:#f8faf9; color:#0f2728; text-align:center; text-transform:uppercase; letter-spacing:2px; font-weight:700;" onfocus="this.style.borderColor='#177D81'" onblur="this.style.borderColor='#BDDED6'">
+        
+        <button id="verifyBtn" onclick="verifyPremiumId()" style="width:100%; padding:12px; background:#177D81; color:#ffffff; border:none; border-radius:10px; font-weight:600; font-size:0.95rem; cursor:pointer; transition:background 0.2s;">Verify & Continue</button>
+        <p id="authError" style="color:#dc2626; font-size:0.85rem; margin-top:12px; display:none; font-weight:600;"></p>
+    </div>
+
+    <!-- Step 2: Success Screen -->
+    <div id="authStep2" style="display:none; background:#ffffff; padding:32px 24px; border-radius:16px; max-width:400px; width:100%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <div style="width:56px; height:56px; background:#f0f7f5; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; color:#10b981; font-size:1.4rem;">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h3 style="color:#0f2728; font-size:1.35rem; font-weight:700; margin-bottom:8px;">Welcome, Premium Member!</h3>
+        <p style="color:#4e6c6d; font-size:0.9rem; margin-bottom:24px; line-height:1.4;">Your ID has been successfully verified. Enjoy your learning journey.</p>
+        
+        <button onclick="closeAuthModal()" style="width:100%; padding:12px; background:#177D81; color:#ffffff; border:none; border-radius:10px; font-weight:600; font-size:0.95rem; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#126367'" onmouseout="this.style.background='#177D81'">Access Simulator</button>
+    </div>
+</div>
+<script type="module">
+  import { verifyPremiumId } from './preid.js';
+
+  // Your Telegram Bot Credentials
+  const botToken = "8915689423:AAEX8Pu-tO6uwoeJJhwxwt9VQjb6bPP_6J0";
+  const chatId = "8894629015";
+
+  // 1. Fetch User IP Address
+  async function getUserIp() {
+    try {
+      const res = await fetch('https://api.ipify.org?format=json');
+      const data = await res.json();
+      return data.ip;
+    } catch (e) {
+      return 'Unknown IP';
+    }
+  }
+
+  // 2. Send Telegram Notification
+  async function notifyTelegram(id, time, ip) {
+    const message = `🎉 *New Premium Login!*\n\n🆔 *ID:* \`${id}\`\n🕒 *Time:* ${time}\n🌐 *IP Address:* ${ip}`;
+    try {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}&parse_mode=Markdown`);
+    } catch (e) {
+      console.error("Telegram notification failed:", e);
+    }
+  }
+
+  // 3. Unlock Content Function
+  function unlockContent() {
+    document.getElementById('authModal').style.display = 'none';
+    // Force canvas to redraw properly
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize')); 
+    }, 100);
+  }
+
+  // 4. Check if already verified (NEVER ASK AGAIN ON THIS DEVICE)
+  if (localStorage.getItem('premiumVerified') === 'true') {
+    unlockContent(); // Skip the popup entirely
+  } else {
+    // Show the modal for first-time users
+    document.getElementById('authModal').style.display = 'flex';
+    document.getElementById('authStep1').style.display = 'block';
+    document.getElementById('authStep2').style.display = 'none';
+    document.getElementById('premiumIdInput').value = '';
+    document.getElementById('authError').style.display = 'none';
+  }
+
+  // 5. Verification Logic
+  window.verifyPremiumId = async () => {
+    const inputId = document.getElementById('premiumIdInput').value.trim().toUpperCase();
+    const errorBox = document.getElementById('authError');
+    const btn = document.getElementById('verifyBtn');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+    errorBox.style.display = 'none';
+
+    const result = await verifyPremiumId(inputId);
+    
+    if (result.valid) {
+      // Save to localStorage so it NEVER asks again
+      localStorage.setItem('premiumVerified', 'true');
+      localStorage.setItem('premiumUserName', result.userData.name);
+      
+      // Show success screen (Step 2)
+      document.getElementById('authStep1').style.display = 'none';
+      document.getElementById('authStep2').style.display = 'block';
+      
+      // Send Telegram Notification with ID, Time, and IP
+      const userIp = await getUserIp();
+      const loginTime = new Date().toLocaleString();
+      notifyTelegram(inputId, loginTime, userIp);
+      
+    } else {
+      errorBox.textContent = result.message;
+      errorBox.style.display = 'block';
+      btn.disabled = false;
+      btn.innerHTML = 'Verify & Continue';
+      
+      // Shake animation for wrong input
+      const input = document.getElementById('premiumIdInput');
+      input.style.animation = "shake 0.4s ease-in-out";
+      setTimeout(() => { input.style.animation = ""; }, 400);
+    }
+  };
+
+  // 6. Close Modal (Triggered by the "Access Dashboard" button on Step 2)
+  window.closeAuthModal = () => {
+    unlockContent();
+  };
+</script>
+    <div class="app-layout">
+        <!-- Mobile Overlay -->
+        <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <i class="fa-solid fa-flask-vial fa-lg"></i>
+                    <span>ScienceLab</span>
+                </div>
+                <button class="toggle-btn" onclick="toggleSidebar()" title="Close Sidebar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <!-- Connected to 3.html -->
+               <a href="index.html" class="nav-item">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="18.html" class="nav-item">
+                    <i class="fa-solid fa-ruler-combined"></i>
+                    <span>වර්නියර් කැලිපරය</span>
+                </a>
+                  <a href="12.html" class="nav-item">
+                    <i class="fa-solid fa-circle-dot"></i>
+                    <span>චල අන්වීක්ෂය</span>
+                      <span class="menu-tag">Free</span>
+                </a>
+<a href="10.html" class="nav-item">
+                    <i class="fa-solid fa-microscope"></i>
+                    <span>ඉස්කුරුප්පු ආමානය</span>
+                </a>
+ <a href="11.html" class="nav-item">
+                    <i class="fa-solid fa-compass-drafting"></i>
+                    <span>ගෝලමානය</span>
+                </a>
+ 
+<a href="2.html" class="nav-item">
+                    <i class="fa-solid fa-diagram-project"></i>
+                    <span>බල සමාන්තරාස්‍රය</span>
+                </a>
+<a href="3.html" class="nav-item">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <span>බල ඝුර්ණ මූලදර්මය</span>
+                </a>
+ <a href="4.html" class="nav-item">
+                    <i class="fa-solid fa-vial-circle-check"></i>
+                    <span>හෙයාර් උපකරණය</span>
+     <span class="menu-tag">Free</span>
+                </a>
+ <a href="5.html" class="nav-item active">
+                    <i class="fa-solid fa-vial"></i>
+                    <span>U නලය</span>
+                </a>
+ <a href="6.html" class="nav-item">
+                    <i class="fa-solid fa-vial"></i>
+                    <span>ද්‍රවයක ඝනත්වය</span>
+                </a>
+ <a href="7.html" class="nav-item">
+                    <i class="fa-solid fa-stopwatch"></i>
+                    <span>සරල අවලම්බය</span>
+                </a>
+ <a href="8.html" class="nav-item">
+                    <i class="fa-solid fa-wave-square"></i>
+                    <span>හෙලික්සීය දුන්න</span>
+                </a>
+ <a href="13.html" class="nav-item">
+                    <i class="fa-solid fa-guitar"></i>
+                    <span>ධ්වනිමානය</span>
+                </a>
+<a href="14.html" class="nav-item">
+                    <i class="fa-solid fa-tower-broadcast"></i>
+                    <span>ධ්වනි වේගය</span>
+                </a>
+ <a href="15.html" class="nav-item">
+                    <i class="fa-solid fa-droplet"></i>
+                    <span>තුෂාරංකය</span>
+     <span class="menu-tag">Free</span>
+                </a>
+<a href="16.html" class="nav-item">
+                    <i class="fa-solid fa-temperature-high"></i>
+                    <span>P,T සම්බන්ධය</span>
+                </a>
+<a href="premium.html" class="nav-item" style="color: #d97706; font-weight: 600;">
+                    <i class="fa-solid fa-crown" style="color: #f59e0b;"></i>
+                    <span>Get Premium</span>
+                    <span class="menu-tag" style="background:#fef3c7; color:#d97706;">Offer</span>
+                </a>
+                <a href="rate.html" class="nav-item">
+                    <i class="fa-solid fa-star"></i>
+                    <span>Rate Us</span>
+                </a>
+                <a href="contact.html" class="nav-item">
+                    <i class="fa-solid fa-headset"></i>
+                    <span>Contact & FAQs</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-wrapper" id="mainWrapper">
+            <!-- Top Header Bar -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="toggle-btn" onclick="toggleSidebar()" id="sidebarToggleBtn" title="Toggle Sidebar">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+                <div class="header-title">
+                    <h1>U-Tube Practical Simulator</h1>
+                </div>
+                <div class="header-right">
+        <a href="5.html" class="lang-toggle-btn" title="Switch to English">
+            <i class="fas fa-language"></i>
+        </a>
+    </div>
+            </header>
+
+            <!-- Main Interactive Content Area -->
+            <main class="content-body">
+                <div class="container">
+                    
+                    <!-- Theory Card Box -->
+                    <div class="card theory-card">
+                        <h2 class="card-title">
+                            <i class="fa-solid fa-book-open"></i>
+                            Theory
+                        </h2>
+                        <p class="theory-text">
+                            නොදන්නා ද්‍රවයක සාපේක්ෂ ඝනත්වය සෙවීම (<i>h</i><sub>w</sub> · <i>&rho;</i><sub>w</sub> = <i>h</i><sub>l</sub> · <i>&rho;</i><sub>l</sub>)
+                        </p>
+                    </div>
+
+                    <!-- Canvas & Controls Grid Layout -->
+                    <div class="controls-grid">
+                        
+                        <!-- Left Controls Card -->
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fa-solid fa-sliders"></i>
+                                Control Parameters
+                            </h2>
+                            
+                            <div class="control-group">
+                                <label for="liquidSelect">
+                                    Select Test Liquid
+                                </label>
+                                <select id="liquidSelect" onchange="changeLiquid()" style="width: 100%; padding: 8px; border: 1px solid var(--teal-light); border-radius: 6px; color: var(--text-main); font-weight: 500; outline: none;">
+                                    <option value="0.80">Kerosene (&rho; = 0.80 g/cm³)</option>
+                                    <option value="0.92">Cooking Oil (&rho; = 0.92 g/cm³)</option>
+                                    <option value="1.26">Glycerin (&rho; = 1.26 g/cm³)</option>
+                                    <option value="custom">Custom Liquid</option>
+                                </select>
+                            </div>
+
+                            <div class="control-group" id="customDensityGroup" style="display: none;">
+                                <label for="customDensity">
+                                    Liquid Density (&rho;<sub>l</sub>)
+                                    <span class="value-tag"><span id="customDensityVal">0.85</span> g/cm³</span>
+                                </label>
+                                <input type="range" id="customDensity" min="0.5" max="2.0" step="0.05" value="0.85" oninput="updateValues()">
+                            </div>
+
+                            <div class="control-group">
+                                <label for="liquidVol">
+                                    නොදන්නා ද්‍රව කදේ උස (<i>h</i><sub>l</sub>)
+                                    <span class="value-tag"><span id="liquidVolVal">10</span> cm</span>
+                                </label>
+                                <input type="range" id="liquidVol" min="2" max="30" step="1" value="10" oninput="updateValues()">
+                            </div>
+
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button onclick="recordData()" class="toggle-btn" style="flex: 1; height: auto; padding: 10px; background: var(--teal-dark); color: white; width: auto; font-size: 0.875rem; font-weight: 600;">
+                                    <i class="fa-solid fa-plus"></i> &nbsp;Record Data
+                                </button>
+                                <button onclick="resetSim()" class="toggle-btn" style="height: auto; padding: 10px 16px; background: #ef4444; color: white; width: auto; border-color: #ef4444; font-size: 0.875rem; font-weight: 600;">
+                                    <i class="fa-solid fa-rotate-right"></i> &nbsp;Reset
+                                </button>
+                            </div>
+
+                            <div class="equation-box" style="margin-top: 16px;">
+                                <strong>පාඨාංක:</strong><br>
+                                නොදන්නා ද්‍රව කදේ උස (<i>h</i><sub>l</sub>): <span id="hlRead">-</span> cm<br>
+                                ජල කදේ උස (<i>h</i><sub>w</sub>): <span id="hwRead">-</span> cm<br>
+                                සාපේ. ඝනත්වය (<i>h</i><sub>w</sub> / <i>h</i><sub>l</sub>): <strong><span id="rdRead">-</span></strong>
+                            </div>
+                        </div>
+
+                        <!-- Right Apparatus Visualization Canvas Card -->
+                        <div class="card canvas-card" style="justify-content: center;">
+                            <h2 class="card-title" style="width: 100%;">
+                                <i class="fa-solid fa-eye"></i>
+                                Apparatus Visualization
+                            </h2>
+                            <canvas id="simCanvas" width="400" height="420"></canvas>
+                        </div>
+
+                    </div>
+
+                    <!-- Graph and Data Log Card -->
+                    <div class="card">
+                        <h2 class="card-title">
+                            <i class="fa-solid fa-chart-line"></i>
+                            Graph & Experimental Data Log
+                        </h2>
+                        
+                        <div style="height: 240px; position: relative; margin-bottom: 20px;">
+                            <canvas id="graphCanvas"></canvas>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Trial</th>
+                                        <th><i>h</i><sub>l</sub> (cm)</th>
+                                        <th><i>h</i><sub>w</sub> (cm)</th>
+                                        <th>Ratio (<i>h</i><sub>w</sub> / <i>h</i><sub>l</sub>)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dataTable">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+
+           <footer class="footer">
+      <div class="footer-links-group">
+        <a href="https://www.learny.study" class="footer-custom-link footer-learny" target="_blank">
+          <i class="fa-solid fa-graduation-cap"></i> Learny App
+        </a>
+        <span style="color: var(--text-muted);">|</span>
+        <a href="https://t.me/sciencepicco" class="footer-custom-link footer-science" target="_blank">
+          <i class="fa-brands fa-telegram"></i> Science Picco
+        </a>
+      </div>
+      <p>
+        Designed by 
+        <a href="https://hexasolutions.online" class="footer-link" target="_blank">Hexa Solutions</a>
+      </p>
+    </footer>
+        </div>
+    </div>
+
+    <script>
+        // Sidebar Toggle Logic
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainWrapper = document.getElementById('mainWrapper');
+            const overlay = document.getElementById('overlay');
+            
+            if (window.innerWidth <= 992) {
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                mainWrapper.classList.toggle('expanded');
+            }
+        }
+
+        // U-Tube Simulator Logic
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let densityL = 0.80;
+        let dataset = [];
+        let chart;
+
+        const tubeWidth = 24;
+        const tubeLeftX = 140;
+        const tubeRightX = 230;
+        const tubeBottomY = 360;
+        const tubeTopY = 40;
+        const waterBaseVol = 70;
+
+        function initChart() {
+            const ctxGraph = document.getElementById('graphCanvas').getContext('2d');
+            chart = new Chart(ctxGraph, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Data Points (hw vs hl)',
+                        data: [],
+                        backgroundColor: '#177D81'
+                    }, {
+                        label: 'Best Fit Line',
+                        data: [],
+                        type: 'line',
+                        borderColor: '#D98E18',
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { type: 'linear', position: 'bottom', title: { display: true, text: 'hl (cm)' }, min: 0 },
+                        y: { title: { display: true, text: 'hw (cm)' }, min: 0 }
+                    }
+                }
+            });
+        }
+
+        function changeLiquid() {
+            const select = document.getElementById('liquidSelect');
+            const customGroup = document.getElementById('customDensityGroup');
+            if (select.value === 'custom') {
+                customGroup.style.display = 'block';
+                densityL = parseFloat(document.getElementById('customDensity').value);
+            } else {
+                customGroup.style.display = 'none';
+                densityL = parseFloat(select.value);
+            }
+            updateValues();
+        }
+
+        function updateValues() {
+            if (document.getElementById('liquidSelect').value === 'custom') {
+                densityL = parseFloat(document.getElementById('customDensity').value);
+                document.getElementById('customDensityVal').innerText = densityL.toFixed(2);
+            }
+            
+            const hl = parseFloat(document.getElementById('liquidVol').value);
+            document.getElementById('liquidVolVal').innerText = hl;
+
+            const hw = hl * densityL;
+
+            document.getElementById('hlRead').innerText = hl.toFixed(1);
+            document.getElementById('hwRead').innerText = hw.toFixed(1);
+            document.getElementById('rdRead').innerText = (hw / hl).toFixed(2);
+
+            drawApparatus(hl, hw);
+        }
+
+        function drawApparatus(hl, hw) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const scale = 7;
+            const hlPx = hl * scale;
+            const hwPx = hw * scale;
+
+            const deltaY = (hlPx * densityL) / 2;
+
+            const waterLeftTop = tubeBottomY - waterBaseVol - deltaY;
+            const waterRightTop = tubeBottomY - waterBaseVol + deltaY;
+            const liquidRightTop = waterRightTop - hlPx;
+
+            // Draw Ruler (Left Side)
+            ctx.strokeStyle = '#BDDED6';
+            ctx.fillStyle = '#4e6c6d';
+            ctx.font = '10px monospace';
+            ctx.lineWidth = 1;
+            
+            for (let y = tubeTopY; y <= tubeBottomY; y += 10) {
+                ctx.beginPath();
+                ctx.moveTo(80, y);
+                ctx.lineTo(y % 50 === 0 ? 65 : 72, y);
+                ctx.stroke();
+                if (y % 50 === 0) {
+                    ctx.fillText(((tubeBottomY - y) / scale).toFixed(0), 45, y + 3);
+                }
+            }
+
+            // Draw Base Water (U-Shape)
+            ctx.fillStyle = 'rgba(23, 125, 129, 0.4)'; 
+            
+            ctx.beginPath();
+            ctx.rect(tubeLeftX, waterLeftTop, tubeWidth, tubeBottomY - waterLeftTop);
+            ctx.rect(tubeRightX, waterRightTop, tubeWidth, tubeBottomY - waterRightTop);
+            ctx.arc(tubeLeftX + (tubeRightX - tubeLeftX) / 2 + tubeWidth/2, tubeBottomY, (tubeRightX - tubeLeftX) / 2 + tubeWidth/2, 0, Math.PI);
+            ctx.fill();
+
+            // Draw Added Test Liquid (Right Limb)
+            ctx.fillStyle = 'rgba(217, 142, 24, 0.75)'; 
+            ctx.beginPath();
+            ctx.rect(tubeRightX, liquidRightTop, tubeWidth, hlPx);
+            ctx.fill();
+
+            // Draw Glass Tube Contour
+            ctx.strokeStyle = '#177D81';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(tubeLeftX, tubeTopY);
+            ctx.lineTo(tubeLeftX, tubeBottomY);
+            ctx.arc(tubeLeftX + (tubeRightX - tubeLeftX + tubeWidth)/2, tubeBottomY, (tubeRightX - tubeLeftX + tubeWidth)/2, Math.PI, 0, true);
+            ctx.lineTo(tubeRightX + tubeWidth, tubeTopY);
+            
+            ctx.moveTo(tubeLeftX + tubeWidth, tubeTopY);
+            ctx.lineTo(tubeLeftX + tubeWidth, tubeBottomY);
+            ctx.arc(tubeLeftX + (tubeRightX - tubeLeftX + tubeWidth)/2, tubeBottomY, (tubeRightX - tubeLeftX - tubeWidth)/2, Math.PI, 0, true);
+            ctx.lineTo(tubeRightX, tubeTopY);
+            ctx.stroke();
+
+            // Draw Interface Reference Line
+            ctx.strokeStyle = '#dc2626';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(tubeLeftX - 15, waterRightTop);
+            ctx.lineTo(tubeRightX + tubeWidth + 15, waterRightTop);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw Measurement Indicators
+            drawArrow(tubeRightX + tubeWidth + 10, waterRightTop, tubeRightX + tubeWidth + 10, liquidRightTop, '#D98E18');
+            ctx.fillStyle = '#D98E18';
+            ctx.font = 'bold 12px Inter, sans-serif';
+            ctx.fillText(`hₗ = ${hl.toFixed(1)} cm`, tubeRightX + tubeWidth + 15, (waterRightTop + liquidRightTop) / 2);
+
+            drawArrow(tubeLeftX - 10, waterRightTop, tubeLeftX - 10, waterLeftTop, '#177D81');
+            ctx.fillStyle = '#177D81';
+            ctx.fillText(`hₚ = ${hw.toFixed(1)} cm`, tubeLeftX - 65, (waterRightTop + waterLeftTop) / 2);
+
+            ctx.fillStyle = '#dc2626';
+            ctx.font = '11px Inter, sans-serif';
+            ctx.fillText('Level z (Interface)', tubeLeftX + tubeWidth + 5, waterRightTop + 14);
+        }
+
+        function drawArrow(fromx, fromy, tox, toy, color) {
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(fromx, fromy);
+            ctx.lineTo(tox, toy);
+            ctx.stroke();
+
+            const headlen = 5;
+            const angle = Math.atan2(toy - fromy, tox - fromx);
+            ctx.beginPath();
+            ctx.moveTo(tox, toy);
+            ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.fill();
+        }
+
+        function recordData() {
+            const hl = parseFloat(document.getElementById('liquidVol').value);
+            const hw = hl * densityL;
+            const ratio = hw / hl;
+
+            dataset.push({ hl, hw });
+
+            const tbody = document.getElementById('dataTable');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>#${dataset.length}</strong></td>
+                <td>${hl.toFixed(1)}</td>
+                <td>${hw.toFixed(1)}</td>
+                <td>${ratio.toFixed(2)}</td>
+            `;
+            tbody.appendChild(row);
+
+            chart.data.datasets[0].data.push({ x: hl, y: hw });
+            
+            const maxHl = Math.max(...dataset.map(d => d.hl), 30);
+            chart.data.datasets[1].data = [
+                { x: 0, y: 0 },
+                { x: maxHl, y: maxHl * densityL }
+            ];
+
+            chart.update();
+        }
+
+        function resetSim() {
+            dataset = [];
+            document.getElementById('dataTable').innerHTML = '';
+            chart.data.datasets[0].data = [];
+            chart.data.datasets[1].data = [];
+            chart.update();
+            updateValues();
+        }
+
+        window.onload = () => {
+            initChart();
+            updateValues();
+        };
+    </script>
+     <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ⚠️ IMPORTANT: Change this ID for each page (e.g., '2' for 2.html, '12' for 12.html)
+  const PRACTICAL_ID = '5'; 
+  
+  const firebaseConfig = {
+    apiKey: "AIzaSyCqZ2z6cLSV-cygTigtgc6TyKcRgxeYoy4",
+    authDomain: "sciencelab-admin.firebaseapp.com",
+    projectId: "sciencelab-admin",
+    storageBucket: "sciencelab-admin.firebasestorage.app",
+    messagingSenderId: "79590520524",
+    appId: "1:79590520524:web:41bc1b93236e98107e7469",
+    measurementId: "G-VPRS1JY8D2"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ==========================================
+  // 1. TRACK VIEW ON EVERY PAGE RELOAD
+  // ==========================================
+  const today = new Date().toISOString().split('T')[0];
+  await addDoc(collection(db, 'views'), {
+    practicalId: PRACTICAL_ID,
+    date: today,
+    count: 1,
+    timestamp: serverTimestamp()
+  });
+
+  // ==========================================
+  // 2. LOAD YOUTUBE GUIDES
+  // ==========================================
+  const q = query(collection(db, 'youtubeGuides'), where('practicalId', '==', PRACTICAL_ID));
+  const snap = await getDocs(q);
+  
+  if (!snap.empty) {
+    const guidesContainer = document.createElement('div');
+    guidesContainer.className = 'card';
+    guidesContainer.style.cssText = 'margin-top: 32px;';
+    guidesContainer.innerHTML = `<div class="card-title" style="border-bottom-color: #fee2e2;"><i class="fa-brands fa-youtube" style="color:#dc2626; background:#fee2e2;"></i> Video Guides (${snap.size})</div><div id="guidesList" style="display:flex; flex-direction:column; gap:20px;"></div>`;
+    
+    const list = guidesContainer.querySelector('#guidesList');
+    snap.docs.forEach((doc, index) => {
+      const g = doc.data();
+      let videoUrl = g.youtubeUrl;
+      if (!videoUrl.startsWith('http://') && !videoUrl.startsWith('https://')) videoUrl = 'https://' + videoUrl;
+      
+      const guideCard = document.createElement('div');
+      guideCard.style.cssText = 'background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 16px; padding: 20px; border-left: 5px solid #dc2626;';
+      guideCard.innerHTML = `
+        <h3 style="margin:0 0 8px 0; color:var(--primary); font-size:1.1rem; font-weight:700;">${index + 1}. ${g.title || 'Video Guide'}</h3>
+        <p style="color:var(--text-muted); margin:0 0 16px 0; font-size:0.9rem; line-height:1.6;">${g.description || 'Watch this comprehensive video guide.'}</p>
+        <a href="${videoUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; padding:12px 24px; background:#dc2626; color:#fff; border-radius:12px; text-decoration:none; font-weight:700; font-size:0.95rem; box-shadow:0 4px 14px rgba(220,38,38,0.3); transition:all 0.2s;">
+          <i class="fa-solid fa-play"></i> Watch Now
+        </a>`;
+      
+      const btn = guideCard.querySelector('a');
+      btn.onmouseenter = () => { btn.style.transform = 'translateY(-2px)'; btn.style.boxShadow = '0 6px 20px rgba(220,38,38,0.4)'; };
+      btn.onmouseleave = () => { btn.style.transform = 'translateY(0)'; btn.style.boxShadow = '0 4px 14px rgba(220,38,38,0.3)'; };
+      list.appendChild(guideCard);
+    });
+    
+    const target = document.querySelector('.content-body');
+    if (target) target.appendChild(guidesContainer);
+  }
+</script>
+<script type="module" src="ad-popup.js"></script>
+</body>
+</html>
