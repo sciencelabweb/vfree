@@ -1,5 +1,5 @@
 /* =========================================================
-   block.js — Free Version Lock Script (v2.0 - Fixed)
+   block.js — Free Version Lock Script (v3.0 - Visible but Locked)
    ========================================================= */
 (function () {
     'use strict';
@@ -8,7 +8,6 @@
 
     /* ---------- 1. ROBUST URL MATCHING ---------- */
     const pathname = window.location.pathname;
-    // Matches both "10" and "10.html" (handles GitHub Pages clean URLs)
     const lockedIdentifiers = ['10', '11', '18', '12', '2', '3', '4', '5', '6', '7', '8', '13', '14', '15', '16'];
     
     const isLocked = lockedIdentifiers.some(id => 
@@ -17,21 +16,19 @@
         pathname.includes('/' + id + '.')
     );
 
-    console.log("Current Path:", pathname);
-    console.log("Is Locked?", isLocked);
-
     if (!isLocked) {
         console.log("✅ Page is free. No lock applied.");
         return; 
     }
 
-    console.log("🔒 Page is locked. Applying restrictions...");
+    console.log("🔒 Page is locked. Applying visible restrictions...");
 
     /* ---------- 2. INJECT CSS STYLES ---------- */
     function injectStyles() {
-        if (document.getElementById('block-js-styles')) return; // Prevent duplicate injection
+        if (document.getElementById('block-js-styles')) return;
         
         const css = `
+        /* 1. Premium Banner (Below Header) */
         .premium-banner {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
             border-bottom: 2px solid #f59e0b;
@@ -57,34 +54,87 @@
         }
         .premium-banner-btn:hover { background: #b45309; transform: translateY(-2px); }
 
-        .lock-overlay {
-            position: absolute; inset: 0;
-            background: rgba(255,255,255,.92);
-            backdrop-filter: blur(6px);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 50; border-radius: 20px;
+        /* 2. Disabled Controls (Visible but unclickable) */
+        .free-locked {
+            opacity: 0.65 !important;        /* Clearly visible, just slightly faded */
+            pointer-events: none !important; /* Cannot be clicked or typed in */
+            cursor: not-allowed !important;
+            filter: grayscale(0.2) !important;
+        }
+
+        /* 3. Subtle Lock Overlay (Does NOT hide the simulator) */
+        .lock-overlay-visible {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.15); /* Very transparent - simulator is fully visible behind it */
+            backdrop-filter: blur(2px);            /* Only a tiny hint of blur for depth */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            border-radius: 20px;
+            pointer-events: auto; /* Blocks clicks from reaching the simulator */
             animation: fadeIn .4s ease;
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .lock-overlay-content { text-align: center; padding: 28px; }
-        .lock-overlay-content i { font-size: 3rem; color: #177D81; margin-bottom: 14px; display: block; }
-        .lock-overlay-content h3 { color: #0f2728; margin: 0 0 6px; font-size: 1.2rem; }
-        .lock-overlay-content p { color: #4e6c6d; margin: 0 0 18px; font-size: .9rem; }
-        .lock-overlay-content .btn {
-            background: #177D81; color: #fff; padding: 10px 24px; border-radius: 12px;
-            text-decoration: none; font-weight: 700; display: inline-flex; align-items: center;
-            gap: 8px; transition: all .3s; box-shadow: 0 4px 14px rgba(23,125,129,.3);
-        }
-        .lock-overlay-content .btn:hover { background: #126367; transform: translateY(-2px); }
-
-        .free-locked { opacity: 0.5 !important; pointer-events: none !important; filter: grayscale(0.4) !important; }
         
+        .lock-overlay-content {
+            pointer-events: auto; /* Allow clicking the button inside */
+            background: rgba(255, 255, 255, 0.95);
+            padding: 32px 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(23, 125, 129, 0.15);
+            text-align: center;
+            border: 2px solid var(--teal-light, #BDDED6);
+            max-width: 400px;
+            width: 90%;
+        }
+        .lock-overlay-content i {
+            font-size: 3.5rem;
+            color: var(--teal-dark, #177D81);
+            margin-bottom: 16px;
+            display: block;
+        }
+        .lock-overlay-content h3 {
+            color: var(--primary, #0f2728);
+            margin: 0 0 8px;
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+        .lock-overlay-content p {
+            color: var(--text-muted, #4e6c6d);
+            margin: 0 0 24px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .lock-overlay-content .btn {
+            background: var(--teal-dark, #177D81);
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(23, 125, 129, 0.3);
+            font-size: 1rem;
+        }
+        .lock-overlay-content .btn:hover {
+            background: var(--teal-dark-hover, #126367);
+            transform: translateY(-2px);
+        }
+
         @media (max-width: 600px) {
             .premium-banner { padding: 10px 14px; top: 64px; }
             .premium-banner-text h3 { font-size: .9rem; }
             .premium-banner-text p { font-size: .75rem; }
             .premium-banner-btn { padding: 8px 14px; font-size: .8rem; }
-            .premium-banner-icon { font-size: 1.5rem; }
+            .lock-overlay-content { padding: 24px 20px; }
+            .lock-overlay-content i { font-size: 2.5rem; }
+            .lock-overlay-content h3 { font-size: 1.1rem; }
         }
         `;
         const styleEl = document.createElement('style');
@@ -103,8 +153,8 @@
                 <div class="premium-banner-content">
                     <div class="premium-banner-icon"><i class="fas fa-crown"></i></div>
                     <div class="premium-banner-text">
-                        <h3>🔒 Premium Practical Locked</h3>
-                        <p>Upgrade to Premium to unlock this simulator and all interactive features.</p>
+                        <h3>🔒 Premium Practical</h3>
+                        <p>Upgrade to unlock interactive measurements and calculations.</p>
                     </div>
                     <a href="premium.html" class="premium-banner-btn">
                         <i class="fas fa-unlock"></i> Get Premium
@@ -113,21 +163,19 @@
             `;
             header.parentNode.insertBefore(banner, header.nextSibling);
             console.log("✅ Premium banner injected.");
-        } else {
-            console.warn("⚠️ Could not find .top-header to insert banner.");
         }
     }
 
-    /* ---------- 4. LOCK SIMULATOR CONTROLS ---------- */
+    /* ---------- 4. LOCK SIMULATOR CONTROLS (VISIBLE BUT DISABLED) ---------- */
     function lockSimulator() {
-        // 1. Disable all interactive controls inside the main content area
+        // 1. Disable all interactive controls (inputs, selects, buttons, canvas)
         const controls = document.querySelectorAll(
             '.content-body input, .content-body select, .content-body button, .content-body canvas'
         );
         
         let lockedCount = 0;
         controls.forEach(el => {
-            // Skip sidebar/menu buttons if they accidentally get caught
+            // Protect sidebar and header from being disabled
             if (el.closest('.sidebar') || el.closest('.top-header')) return;
             
             el.disabled = true;
@@ -135,15 +183,10 @@
             el.setAttribute('title', '🔒 Premium feature — upgrade to unlock');
             lockedCount++;
         });
-        console.log(`🔒 Disabled ${lockedCount} interactive elements.`);
+        console.log(`🔒 Disabled ${lockedCount} interactive elements (kept visible).`);
 
-        // 2. Add lock overlay on the main simulator area
-        // Try multiple possible containers to ensure it covers the right area
-        const target = document.querySelector('.canvas-card') || 
-                       document.querySelector('.controls-grid') || 
-                       document.querySelector('.content-body .container') ||
-                       document.querySelector('.content-body');
-
+        // 2. Add a subtle, transparent lock overlay to the main content area
+        const target = document.querySelector('.content-body');
         if (target) {
             // Ensure parent has relative positioning for absolute overlay
             if (getComputedStyle(target).position === 'static') {
@@ -151,21 +194,19 @@
             }
             
             const overlay = document.createElement('div');
-            overlay.className = 'lock-overlay';
+            overlay.className = 'lock-overlay-visible';
             overlay.innerHTML = `
                 <div class="lock-overlay-content">
                     <i class="fas fa-lock"></i>
                     <h3>Premium Access Required</h3>
-                    <p>Unlock this practical to perform measurements and calculations.</p>
+                    <p>The simulator is visible, but interactions are locked.<br>Upgrade to Premium to perform measurements.</p>
                     <a href="premium.html" class="btn">
                         <i class="fas fa-crown"></i> Get Premium
                     </a>
                 </div>
             `;
             target.appendChild(overlay);
-            console.log("✅ Lock overlay applied to:", target.className);
-        } else {
-            console.warn("⚠️ Could not find a target container for the lock overlay.");
+            console.log("✅ Subtle lock overlay applied.");
         }
     }
 
