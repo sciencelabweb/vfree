@@ -1,8 +1,4 @@
-/* =========================================================
-   block.js — Free Version Lock Script
-   Locks simulator/practical controls on listed pages.
-   Menu, navigation and translations remain functional.
-   ========================================================= */
+
 (function () {
     'use strict';
 
