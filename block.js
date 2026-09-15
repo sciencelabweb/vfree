@@ -4,7 +4,7 @@
 (function () {
     'use strict';
 
-    console.log("🔒 Block.js loaded. Checking page lock status...");
+    console.log("🔒 Block.js v3.0 loaded. Checking page lock status...");
 
     /* ---------- 1. ROBUST URL MATCHING ---------- */
     const pathname = window.location.pathname;
@@ -21,7 +21,7 @@
         return; 
     }
 
-    console.log("🔒 Page is locked. Applying visible restrictions...");
+    console.log("🔒 Page is locked. Making simulator visible but non-interactive...");
 
     /* ---------- 2. INJECT CSS STYLES ---------- */
     function injectStyles() {
@@ -54,77 +54,32 @@
         }
         .premium-banner-btn:hover { background: #b45309; transform: translateY(-2px); }
 
-        /* 2. Disabled Controls (Visible but unclickable) */
+        /* 2. Disabled State for Controls (Visible but can't click) */
         .free-locked {
-            opacity: 0.65 !important;        /* Clearly visible, just slightly faded */
-            pointer-events: none !important; /* Cannot be clicked or typed in */
+            opacity: 0.5 !important;
+            pointer-events: none !important; /* Blocks ALL clicks/touches on canvas and inputs */
             cursor: not-allowed !important;
-            filter: grayscale(0.2) !important;
+            filter: grayscale(0.3) !important;
         }
 
-        /* 3. Subtle Lock Overlay (Does NOT hide the simulator) */
-        .lock-overlay-visible {
+        /* 3. Subtle Watermark Badge (Does NOT hide the simulator) */
+        .premium-watermark {
             position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.15); /* Very transparent - simulator is fully visible behind it */
-            backdrop-filter: blur(2px);            /* Only a tiny hint of blur for depth */
+            top: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--teal-light, #BDDED6);
+            color: var(--teal-dark, #177D81);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            justify-content: center;
-            z-index: 50;
-            border-radius: 20px;
-            pointer-events: auto; /* Blocks clicks from reaching the simulator */
-            animation: fadeIn .4s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        .lock-overlay-content {
-            pointer-events: auto; /* Allow clicking the button inside */
-            background: rgba(255, 255, 255, 0.95);
-            padding: 32px 40px;
-            border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(23, 125, 129, 0.15);
-            text-align: center;
-            border: 2px solid var(--teal-light, #BDDED6);
-            max-width: 400px;
-            width: 90%;
-        }
-        .lock-overlay-content i {
-            font-size: 3.5rem;
-            color: var(--teal-dark, #177D81);
-            margin-bottom: 16px;
-            display: block;
-        }
-        .lock-overlay-content h3 {
-            color: var(--primary, #0f2728);
-            margin: 0 0 8px;
-            font-size: 1.3rem;
-            font-weight: 800;
-        }
-        .lock-overlay-content p {
-            color: var(--text-muted, #4e6c6d);
-            margin: 0 0 24px;
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-        .lock-overlay-content .btn {
-            background: var(--teal-dark, #177D81);
-            color: #fff;
-            padding: 12px 28px;
-            border-radius: 14px;
-            text-decoration: none;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 14px rgba(23, 125, 129, 0.3);
-            font-size: 1rem;
-        }
-        .lock-overlay-content .btn:hover {
-            background: var(--teal-dark-hover, #126367);
-            transform: translateY(-2px);
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            z-index: 10;
+            pointer-events: none; /* Lets users see the simulator behind it */
         }
 
         @media (max-width: 600px) {
@@ -132,9 +87,8 @@
             .premium-banner-text h3 { font-size: .9rem; }
             .premium-banner-text p { font-size: .75rem; }
             .premium-banner-btn { padding: 8px 14px; font-size: .8rem; }
-            .lock-overlay-content { padding: 24px 20px; }
-            .lock-overlay-content i { font-size: 2.5rem; }
-            .lock-overlay-content h3 { font-size: 1.1rem; }
+            .premium-banner-icon { font-size: 1.5rem; }
+            .premium-watermark { top: 10px; right: 10px; font-size: 0.75rem; padding: 6px 12px; }
         }
         `;
         const styleEl = document.createElement('style');
@@ -153,8 +107,8 @@
                 <div class="premium-banner-content">
                     <div class="premium-banner-icon"><i class="fas fa-crown"></i></div>
                     <div class="premium-banner-text">
-                        <h3>🔒 Premium Practical</h3>
-                        <p>Upgrade to unlock interactive measurements and calculations.</p>
+                        <h3>🔒 Premium Practical (Preview Mode)</h3>
+                        <p>Upgrade to Premium to unlock interactive controls and perform this experiment.</p>
                     </div>
                     <a href="premium.html" class="premium-banner-btn">
                         <i class="fas fa-unlock"></i> Get Premium
@@ -166,47 +120,41 @@
         }
     }
 
-    /* ---------- 4. LOCK SIMULATOR CONTROLS (VISIBLE BUT DISABLED) ---------- */
+    /* ---------- 4. LOCK SIMULATOR (Visible but Non-Interactive) ---------- */
     function lockSimulator() {
-        // 1. Disable all interactive controls (inputs, selects, buttons, canvas)
+        // 1. Disable all interactive controls inside the main content area
         const controls = document.querySelectorAll(
             '.content-body input, .content-body select, .content-body button, .content-body canvas'
         );
         
         let lockedCount = 0;
         controls.forEach(el => {
-            // Protect sidebar and header from being disabled
-            if (el.closest('.sidebar') || el.closest('.top-header')) return;
+            // PROTECT: Do not lock sidebar menu, header, or translate buttons
+            if (el.closest('.sidebar') || el.closest('.top-header') || el.closest('.footer')) return;
             
             el.disabled = true;
             el.classList.add('free-locked');
             el.setAttribute('title', '🔒 Premium feature — upgrade to unlock');
             lockedCount++;
         });
-        console.log(`🔒 Disabled ${lockedCount} interactive elements (kept visible).`);
+        console.log(`🔒 Disabled ${lockedCount} interactive elements (simulator remains visible).`);
 
-        // 2. Add a subtle, transparent lock overlay to the main content area
-        const target = document.querySelector('.content-body');
+        // 2. Add a subtle "Read-Only" watermark badge to the simulator card
+        const target = document.querySelector('.canvas-card') || 
+                       document.querySelector('.controls-grid') || 
+                       document.querySelector('.content-body .container');
+
         if (target) {
-            // Ensure parent has relative positioning for absolute overlay
+            // Ensure parent has relative positioning for the absolute badge
             if (getComputedStyle(target).position === 'static') {
                 target.style.position = 'relative';
             }
             
-            const overlay = document.createElement('div');
-            overlay.className = 'lock-overlay-visible';
-            overlay.innerHTML = `
-                <div class="lock-overlay-content">
-                    <i class="fas fa-lock"></i>
-                    <h3>Premium Access Required</h3>
-                    <p>The simulator is visible, but interactions are locked.<br>Upgrade to Premium to perform measurements.</p>
-                    <a href="premium.html" class="btn">
-                        <i class="fas fa-crown"></i> Get Premium
-                    </a>
-                </div>
-            `;
-            target.appendChild(overlay);
-            console.log("✅ Subtle lock overlay applied.");
+            const badge = document.createElement('div');
+            badge.className = 'premium-watermark';
+            badge.innerHTML = `<i class="fas fa-lock"></i> Premium Simulator (Read-Only)`;
+            target.appendChild(badge);
+            console.log("✅ Subtle watermark badge applied.");
         }
     }
 
