@@ -1,10 +1,10 @@
 /* =========================================================
-   block.js — Free Version Lock Script (v4.0 - Stylish Banner)
+   block.js — Free Version Lock Script (v3.0 - Gold Watermark)
    ========================================================= */
 (function () {
     'use strict';
 
-    console.log("🔒 Block.js v4.0 loaded. Checking page lock status...");
+    console.log("🔒 Block.js v3.0 loaded. Checking page lock status...");
 
     /* ---------- 1. ROBUST URL MATCHING ---------- */
     const pathname = window.location.pathname;
@@ -28,164 +28,127 @@
         if (document.getElementById('block-js-styles')) return;
         
         const css = `
-        /* =============================================
-           PREMIUM BANNER - STYLISH GOLD THEME
-           ============================================= */
+        /* 1. Enhanced Premium Banner */
         .premium-banner {
-            position: sticky;
-            top: 80px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%);
+            border-bottom: 3px solid #f59e0b;
+            padding: 18px 24px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25), 
+                        0 4px 12px rgba(217, 119, 6, 0.15);
+            position: sticky; 
+            top: 80px; 
             z-index: 85;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d1810 50%, #1a1a1a 100%);
-            border-bottom: 3px solid transparent;
-            background-clip: padding-box;
-            padding: 16px 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 
-                        inset 0 1px 0 rgba(255, 215, 0, 0.1);
+            animation: slideDown .6s cubic-bezier(0.16, 1, 0.3, 1);
             overflow: hidden;
-            animation: bannerSlideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        
         .premium-banner::before {
             content: '';
             position: absolute;
-            inset: 0;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 50%, rgba(217, 142, 24, 0.15) 0%, transparent 50%);
-            pointer-events: none;
-        }
-        .premium-banner::after {
-            content: '';
-            position: absolute;
             top: -50%;
-            left: -100%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                90deg,
-                transparent 0%,
-                rgba(255, 215, 0, 0.08) 50%,
-                transparent 100%
-            );
-            animation: shimmer 4s infinite;
-            pointer-events: none;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite;
         }
-        @keyframes bannerSlideDown {
-            from { transform: translateY(-100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        
+        @keyframes slideDown { 
+            from { transform: translateY(-100%); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
         }
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-20px, 20px) rotate(180deg); }
         }
-
+        
         .premium-banner-content {
-            position: relative;
-            display: flex;
-            align-items: center;
+            display: flex; 
+            align-items: center; 
             gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            flex-wrap: wrap;
+            max-width: 1200px; 
+            width: 100%; 
+            flex-wrap: wrap; 
             justify-content: center;
-        }
-
-        /* Crown Icon with Glow */
-        .premium-banner-icon {
             position: relative;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #FFD700 0%, #D98E18 100%);
+            z-index: 1;
+        }
+        
+        .premium-banner-icon {
+            font-size: 2.5rem;
+            color: #d97706;
+            background: rgba(255, 255, 255, 0.4);
+            width: 64px;
+            height: 64px;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-            box-shadow: 
-                0 0 20px rgba(255, 215, 0, 0.5),
-                0 0 40px rgba(217, 142, 24, 0.3),
-                inset 0 2px 4px rgba(255, 255, 255, 0.3);
-            animation: crownPulse 2.5s ease-in-out infinite;
-        }
-        .premium-banner-icon i {
-            font-size: 1.6rem;
-            color: #1a1a1a;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
-        }
-        .premium-banner-icon::before {
-            content: '';
-            position: absolute;
-            inset: -4px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #FFD700, #D98E18);
-            opacity: 0.4;
-            filter: blur(8px);
-            z-index: -1;
+            box-shadow: 0 4px 16px rgba(217, 119, 6, 0.3),
+                        inset 0 2px 8px rgba(255, 255, 255, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+            flex-shrink: 0;
         }
-        @keyframes crownPulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 215, 0, 0.5), 0 0 40px rgba(217, 142, 24, 0.3); }
-            50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 215, 0, 0.7), 0 0 60px rgba(217, 142, 24, 0.5); }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 16px rgba(217, 119, 6, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4); }
         }
-
-        /* Text Section */
+        
         .premium-banner-text {
             flex: 1;
             min-width: 200px;
-            text-align: left;
         }
+        
         .premium-banner-text h3 {
-            font-size: 1.15rem;
+            font-size: 1.15rem; 
+            color: #92400e; 
+            margin: 0 0 4px 0; 
             font-weight: 800;
-            margin: 0 0 4px 0;
-            background: linear-gradient(135deg, #FFD700 0%, #FFE55C 50%, #D98E18 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.3px;
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-wrap: wrap;
+            letter-spacing: -0.3px;
         }
-        .premium-banner-text h3 .fa-lock {
-            font-size: 0.9rem;
-            -webkit-text-fill-color: #FFD700;
+        
+        .premium-banner-text h3 i {
+            font-size: 1.1rem;
+            color: #b45309;
         }
+        
         .premium-banner-text p {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.75);
+            font-size: .9rem; 
+            color: #78350f; 
             margin: 0;
             font-weight: 500;
             line-height: 1.4;
         }
-        .premium-banner-text .stars {
-            color: #FFD700;
-            font-size: 0.75rem;
-            margin-top: 4px;
-            letter-spacing: 2px;
-        }
-
-        /* CTA Button with Shine */
+        
         .premium-banner-btn {
-            position: relative;
-            background: linear-gradient(135deg, #FFD700 0%, #D98E18 100%);
-            color: #1a1a1a;
-            padding: 12px 26px;
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            color: #fff; 
+            padding: 14px 28px; 
             border-radius: 50px;
-            text-decoration: none;
-            font-weight: 800;
-            font-size: 0.95rem;
-            display: inline-flex;
+            text-decoration: none; 
+            font-weight: 700; 
+            display: inline-flex; 
             align-items: center;
-            gap: 10px;
-            box-shadow: 
-                0 4px 20px rgba(255, 215, 0, 0.4),
-                0 0 0 1px rgba(255, 255, 255, 0.2) inset;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow: hidden;
+            gap: 10px; 
+            transition: all .3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4),
+                        0 2px 8px rgba(180, 83, 9, 0.3);
+            font-size: .95rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
             flex-shrink: 0;
-            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
         }
+        
         .premium-banner-btn::before {
             content: '';
             position: absolute;
@@ -193,53 +156,26 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.5),
-                transparent
-            );
-            transition: left 0.6s ease;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
         }
-        .premium-banner-btn:hover {
-            transform: translateY(-3px) scale(1.03);
-            box-shadow: 
-                0 8px 30px rgba(255, 215, 0, 0.6),
-                0 0 0 1px rgba(255, 255, 255, 0.3) inset;
-            background: linear-gradient(135deg, #FFE55C 0%, #FFD700 100%);
-        }
+        
         .premium-banner-btn:hover::before {
             left: 100%;
         }
+        
+        .premium-banner-btn:hover {
+            background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(217, 119, 6, 0.5),
+                        0 4px 12px rgba(180, 83, 9, 0.4);
+        }
+        
         .premium-banner-btn i {
-            font-size: 1rem;
+            font-size: 1.1rem;
         }
 
-        /* =============================================
-           WATERMARK BADGE (Unchanged)
-           ============================================= */
-        .premium-watermark {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid var(--teal-light, #BDDED6);
-            color: var(--teal-dark, #177D81);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        /* =============================================
-           DISABLED STATE (Unchanged)
-           ============================================= */
+        /* 2. Disabled State for Controls */
         .free-locked {
             opacity: 0.5 !important;
             pointer-events: none !important;
@@ -247,69 +183,120 @@
             filter: grayscale(0.3) !important;
         }
 
-        /* =============================================
-           MOBILE RESPONSIVE
-           ============================================= */
+        /* 3. Gold Watermark Badge */
+        .premium-watermark {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.98);
+            border: 2px solid #D4AF37;
+            color: #D4AF37;
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.25),
+                        0 2px 8px rgba(0, 0, 0, 0.08);
+            z-index: 10;
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .premium-watermark i {
+            color: #D4AF37;
+            font-size: 1rem;
+        }
+
+        /* Mobile Responsive Banner */
         @media (max-width: 768px) {
             .premium-banner {
                 padding: 14px 16px;
                 top: 64px;
             }
+            
             .premium-banner-content {
-                flex-direction: column;
                 gap: 14px;
-                text-align: center;
             }
+            
             .premium-banner-icon {
-                width: 48px;
-                height: 48px;
+                font-size: 2rem;
+                width: 52px;
+                height: 52px;
             }
-            .premium-banner-icon i {
-                font-size: 1.3rem;
-            }
+            
             .premium-banner-text {
                 text-align: center;
-                min-width: auto;
+                min-width: 100%;
+                order: 2;
             }
+            
             .premium-banner-text h3 {
                 font-size: 1rem;
                 justify-content: center;
             }
+            
             .premium-banner-text p {
-                font-size: 0.82rem;
+                font-size: .8rem;
             }
-            .premium-banner-text .stars {
-                justify-content: center;
-                display: flex;
-            }
+            
             .premium-banner-btn {
+                order: 3;
                 width: 100%;
-                max-width: 280px;
-                padding: 11px 20px;
-                font-size: 0.88rem;
                 justify-content: center;
+                padding: 12px 20px;
+                font-size: .85rem;
             }
+            
+            .premium-banner-icon {
+                order: 1;
+            }
+            
+            .premium-watermark {
+                top: 12px;
+                right: 12px;
+                font-size: 0.75rem;
+                padding: 8px 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .premium-banner {
+                padding: 12px 12px;
+            }
+            
+            .premium-banner-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.75rem;
+            }
+            
+            .premium-banner-text h3 {
+                font-size: .9rem;
+            }
+            
+            .premium-banner-text p {
+                font-size: .75rem;
+            }
+            
+            .premium-banner-btn {
+                padding: 11px 18px;
+                font-size: .8rem;
+            }
+            
             .premium-watermark {
                 top: 10px;
                 right: 10px;
-                font-size: 0.75rem;
+                font-size: 0.7rem;
                 padding: 6px 12px;
+                gap: 6px;
             }
-        }
-
-        @media (max-width: 400px) {
-            .premium-banner {
-                padding: 12px 10px;
-            }
-            .premium-banner-text h3 {
-                font-size: 0.92rem;
-            }
-            .premium-banner-text p {
-                font-size: 0.78rem;
-            }
-            .premium-banner-btn {
-                font-size: 0.82rem;
-                padding: 10px 18px;
+            
+            .premium-watermark i {
+                font-size: 0.85rem;
             }
         }
         `;
@@ -328,26 +315,18 @@
             banner.innerHTML = `
                 <div class="premium-banner-content">
                     <div class="premium-banner-icon">
-                        <i class="fa fa-crown"></i>
+                        <i class="fas fa-crown"></i>
                     </div>
                     <div class="premium-banner-text">
                         <h3>
-                            <i class="fa fa-lock"></i>
-                            Premium Practical Locked
+                            <i class="fas fa-lock"></i>
+                            Premium Practical (Preview Mode)
                         </h3>
-                        <p>Upgrade to unlock this simulator and all interactive features.</p>
-                        <div class="stars">
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                        </div>
+                        <p>Upgrade to Premium to unlock interactive controls and perform this experiment.</p>
                     </div>
                     <a href="premium.html" class="premium-banner-btn">
-                        <i class="fa fa-unlock-alt"></i>
-                        Get Premium
-                        <i class="fa fa-arrow-right"></i>
+                        <i class="fas fa-unlock-alt"></i>
+                        <span>Get Premium</span>
                     </a>
                 </div>
             `;
@@ -384,9 +363,9 @@
             
             const badge = document.createElement('div');
             badge.className = 'premium-watermark';
-            badge.innerHTML = `<i class="fa fa-lock"></i> Premium Simulator (Read-Only)`;
+            badge.innerHTML = `<i class="fas fa-lock"></i> Premium Simulator (Read-Only)`;
             target.appendChild(badge);
-            console.log("✅ Subtle watermark badge applied.");
+            console.log("✅ Gold watermark badge applied.");
         }
     }
 
