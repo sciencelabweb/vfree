@@ -4,14 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Get Premium - Science Lab Pro</title>
-    
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-    <!-- External Stylesheet -->
     <link rel="stylesheet" href="style.css">
-    
     <style>
         .premium-hero {
             background: linear-gradient(135deg, var(--teal-subtle) 0%, #ffffff 100%);
@@ -19,80 +14,66 @@
             text-align: center;
             border-bottom: 2px dashed var(--teal-light);
         }
-        
         .premium-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: linear-gradient(135deg, #dc2626, #ef4444);
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
             color: white;
-            padding: 10px 24px;
+            padding: 8px 20px;
             border-radius: 30px;
-            font-weight: 800;
+            font-weight: 700;
             font-size: 0.9rem;
             margin-bottom: 24px;
             animation: pulse 2s infinite;
             box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
         }
-        
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.05); }
         }
-        
         .premium-title {
             font-size: 2.5rem;
             font-weight: 800;
             color: var(--primary);
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             letter-spacing: -1px;
         }
-        
         .premium-subtitle {
             font-size: 1.1rem;
             color: var(--text-muted);
-            margin-bottom: 40px;
+            max-width: 600px;
+            margin: 0 auto 32px;
+            line-height: 1.6;
         }
-        
-        .pricing-card {
-            max-width: 480px;
-            margin: -40px auto 60px auto;
-            background: #ffffff;
-            border: 3px solid var(--teal-light);
-            border-radius: 24px;
-            padding: 40px 32px;
-            box-shadow: var(--shadow-md);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .pricing-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: linear-gradient(90deg, var(--teal-dark), var(--accent-yellow));
-        }
-        
         .diamond-container {
-            text-align: center;
-            margin-bottom: 24px;
+            margin: 32px 0;
         }
-        
-        .diamond-gif {
+        .diamond-container img {
             width: 120px;
             height: 120px;
             object-fit: contain;
             animation: float 3s ease-in-out infinite;
         }
-        
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-15px); }
         }
-        
+        .pricing-card {
+            max-width: 480px;
+            margin: -40px auto 40px;
+            background: #ffffff;
+            border: 3px solid var(--teal-dark);
+            border-radius: 24px;
+            padding: 40px 32px;
+            box-shadow: 0 20px 50px rgba(23, 125, 129, 0.2);
+            position: relative;
+            z-index: 10;
+        }
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
         .old-price {
             font-size: 1.5rem;
             color: #9ca3af;
@@ -100,19 +81,17 @@
             font-weight: 600;
             margin-bottom: 8px;
         }
-        
         .discount-badge {
             display: inline-block;
-            background: #fee2e2;
-            color: #dc2626;
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
             padding: 6px 16px;
             border-radius: 20px;
             font-weight: 800;
-            font-size: 0.9rem;
+            font-size: 1.1rem;
             margin-bottom: 12px;
-            border: 2px solid #fecaca;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
-        
         .new-price {
             font-size: 3.5rem;
             font-weight: 800;
@@ -120,165 +99,122 @@
             line-height: 1;
             margin-bottom: 8px;
         }
-        
         .new-price span {
-            font-size: 1.5rem;
-            vertical-align: super;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-muted);
         }
-        
         .price-duration {
             color: var(--text-muted);
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            margin-bottom: 24px;
         }
-        
-        .buy-btn {
+        .features-grid {
+            display: grid;
+            gap: 16px;
+            margin: 32px 0;
+        }
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 16px;
+            background: var(--teal-subtle);
+            border-radius: 12px;
+            border: 1.5px solid var(--teal-light);
+            transition: all 0.3s ease;
+        }
+        .feature-item:hover {
+            transform: translateX(5px);
+            border-color: var(--teal-dark);
+            box-shadow: var(--shadow-sm);
+        }
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--teal-dark);
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .feature-text {
+            flex: 1;
+        }
+        .feature-text h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0 0 4px 0;
+        }
+        .feature-text p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.4;
+        }
+        .buy-button {
             width: 100%;
             padding: 18px;
-            background: linear-gradient(135deg, var(--teal-dark), var(--teal-dark-hover));
+            background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal-dark-hover) 100%);
             color: white;
             border: none;
             border-radius: 14px;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: 800;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
             box-shadow: 0 6px 20px rgba(23, 125, 129, 0.4);
             text-decoration: none;
-            margin-bottom: 16px;
+            margin-top: 24px;
         }
-        
-        .buy-btn:hover {
+        .buy-button:hover {
             transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(23, 125, 129, 0.5);
         }
-        
-        .secure-badge {
+        .guarantee {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            font-weight: 600;
         }
-        
-        .features-section {
-            max-width: 900px;
-            margin: 0 auto 60px auto;
-            padding: 0 20px;
-        }
-        
-        .features-title {
+        .urgency-text {
             text-align: center;
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--primary);
-            margin-bottom: 40px;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-        }
-        
-        .feature-card {
-            background: #ffffff;
-            border: 2px solid var(--border-color);
-            border-radius: 16px;
-            padding: 28px;
-            transition: all 0.3s ease;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-md);
-            border-color: var(--teal-dark);
-        }
-        
-        .feature-icon {
-            width: 56px;
-            height: 56px;
-            background: var(--teal-subtle);
-            border-radius: 14px;
+            color: #dc2626;
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-top: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            color: var(--teal-dark);
-            margin-bottom: 16px;
+            gap: 8px;
         }
-        
-        .feature-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-        
-        .feature-desc {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-        
-        .guarantee-box {
-            max-width: 600px;
-            margin: 40px auto;
-            background: linear-gradient(135deg, var(--teal-subtle), #ffffff);
-            border: 2px dashed var(--teal-light);
-            border-radius: 16px;
-            padding: 32px;
-            text-align: center;
-        }
-        
-        .guarantee-icon {
-            font-size: 2.5rem;
-            color: var(--teal-dark);
-            margin-bottom: 16px;
-        }
-        
-        .guarantee-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-        
-        .guarantee-text {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-        
         @media (max-width: 600px) {
             .premium-title {
                 font-size: 1.8rem;
             }
-            
             .new-price {
-                font-size: 2.5rem;
+                font-size: 2.8rem;
             }
-            
             .pricing-card {
+                margin: -30px 16px 40px;
                 padding: 32px 24px;
-                margin: -30px 16px 40px 16px;
-            }
-            
-            .features-grid {
-                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-
     <div class="app-layout">
         <!-- Mobile Overlay -->
         <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
@@ -395,15 +331,14 @@
                     <h1>Premium Access</h1>
                 </div>
                 <div class="header-right">
-                    <a href="3s.html" class="lang-toggle-btn" title="Switch to Sinhala">
+                    <a href="3s.html" class="lang-toggle-btn" title="Switch to Sinhala" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: var(--teal-subtle); border: 2px solid var(--teal-light); border-radius: 14px; color: var(--teal-dark); text-decoration: none;">
                         <i class="fas fa-language"></i>
                     </a>
                 </div>
             </header>
 
             <!-- Main Content -->
-            <main class="content-body" style="padding-top: 20px;">
-                
+            <main class="content-body">
                 <!-- Hero Section -->
                 <div class="premium-hero">
                     <div class="premium-badge">
@@ -411,105 +346,130 @@
                         LIMITED TIME OFFER
                     </div>
                     <h1 class="premium-title">Upgrade to Premium</h1>
-                    <p class="premium-subtitle">Unlock all features and take your learning to the next level</p>
+                    <p class="premium-subtitle">
+                        Get unlimited access to all advanced physics simulators and exclusive learning tools
+                    </p>
+                    <div class="diamond-container">
+                        <img src="https://i.postimg.cc/mrWGRYD4/diamond-(1).gif" alt="Premium Diamond">
+                    </div>
                 </div>
 
                 <!-- Pricing Card -->
                 <div class="pricing-card">
-                    <div class="diamond-container">
-                        <img src="https://i.postimg.cc/mrWGRYD4/diamond-(1).gif" alt="Premium Diamond" class="diamond-gif">
+                    <div class="pricing-header">
+                        <div class="old-price">Rs. 2,000</div>
+                        <div class="discount-badge">
+                            <i class="fa-solid fa-percent"></i> 51% OFF
+                        </div>
+                        <div class="new-price">
+                            Rs. 999<span>.00</span>
+                        </div>
+                        <div class="price-duration">
+                            <i class="fa-solid fa-infinity"></i> Lifetime Access
+                        </div>
                     </div>
-                    
-                    <div class="old-price">Rs. 2,000</div>
-                    <div class="discount-badge">
-                        <i class="fa-solid fa-percent"></i> 51% OFF
-                    </div>
-                    <div class="new-price">
-                        <span>Rs.</span>999
-                    </div>
-                    <div class="price-duration">
-                        <i class="fa-solid fa-infinity"></i> Lifetime Access
-                    </div>
-                    
-                    <a href="https://t.me/learnyapp" target="_blank" class="buy-btn">
-                        <i class="fa-solid fa-cart-shopping"></i>
-                        Buy Now
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </a>
-                    
-                    <div class="secure-badge">
-                        <i class="fa-solid fa-shield-halved"></i>
-                        Secure Payment via Telegram
-                    </div>
-                </div>
 
-                <!-- Features Section -->
-                <div class="features-section">
-                    <h2 class="features-title">
-                        <i class="fa-solid fa-gem" style="color: var(--teal-dark);"></i>
-                        Premium Features
-                    </h2>
-                    
                     <div class="features-grid">
-                        <div class="feature-card">
+                        <div class="feature-item">
                             <div class="feature-icon">
                                 <i class="fa-solid fa-lock-open"></i>
                             </div>
-                            <div class="feature-title">Unlock All Simulators</div>
-                            <div class="feature-desc">Get unlimited access to all physics and science simulators without any restrictions.</div>
+                            <div class="feature-text">
+                                <h4>Unlock All Simulators</h4>
+                                <p>Access to all premium physics practicals without restrictions</p>
+                            </div>
                         </div>
-                        
-                        <div class="feature-card">
+                        <div class="feature-item">
                             <div class="feature-icon">
                                 <i class="fa-solid fa-ban"></i>
                             </div>
-                            <div class="feature-title">Ad-Free Experience</div>
-                            <div class="feature-desc">Enjoy a clean, distraction-free learning environment with zero advertisements.</div>
-                        </div>
-                        
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fa-solid fa-bolt"></i>
+                            <div class="feature-text">
+                                <h4>No Ads Experience</h4>
+                                <p>Learn without interruptions - completely ad-free interface</p>
                             </div>
-                            <div class="feature-title">Priority Access</div>
-                            <div class="feature-desc">Get early access to new features, simulators, and educational content before others.</div>
                         </div>
-                        
-                        <div class="feature-card">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fa-brands fa-youtube"></i>
+                            </div>
+                            <div class="feature-text">
+                                <h4>Video Guides</h4>
+                                <p>Exclusive video tutorials for complex experiments</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
                             <div class="feature-icon">
                                 <i class="fa-solid fa-download"></i>
                             </div>
-                            <div class="feature-title">Offline Mode</div>
-                            <div class="feature-desc">Download and use simulators offline without internet connection anytime.</div>
+                            <div class="feature-text">
+                                <h4>Offline Access</h4>
+                                <p>Download and use simulators without internet connection</p>
+                            </div>
                         </div>
-                        
-                        <div class="feature-card">
+                        <div class="feature-item">
                             <div class="feature-icon">
                                 <i class="fa-solid fa-headset"></i>
                             </div>
-                            <div class="feature-title">Priority Support</div>
-                            <div class="feature-desc">Get 24/7 priority customer support and quick resolution to your queries.</div>
-                        </div>
-                        
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fa-solid fa-infinity"></i>
+                            <div class="feature-text">
+                                <h4>Priority Support</h4>
+                                <p>Get instant help from our expert team 24/7</p>
                             </div>
-                            <div class="feature-title">Lifetime Updates</div>
-                            <div class="feature-desc">Receive all future updates and new content absolutely free for lifetime.</div>
                         </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fa-solid fa-sync"></i>
+                            </div>
+                            <div class="feature-text">
+                                <h4>Free Updates</h4>
+                                <p>Lifetime free updates with new features and content</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="https://t.me/learnyapp" target="_blank" class="buy-button">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        Buy Now - Rs. 999
+                    </a>
+
+                    <div class="guarantee">
+                        <i class="fa-solid fa-shield-halved" style="color: var(--teal-dark);"></i>
+                        Secure Payment • Instant Activation
+                    </div>
+
+                    <div class="urgency-text">
+                        <i class="fa-solid fa-clock"></i>
+                        Offer expires soon! Don't miss out.
                     </div>
                 </div>
 
-                <!-- Guarantee Box -->
-                <div class="guarantee-box">
-                    <div class="guarantee-icon">
-                        <i class="fa-solid fa-certificate"></i>
-                    </div>
-                    <div class="guarantee-title">100% Satisfaction Guarantee</div>
-                    <div class="guarantee-text">
-                        We're confident you'll love Science Lab Pro. If you're not satisfied, 
-                        we offer a hassle-free refund within 7 days of purchase.
+                <!-- Why Choose Premium -->
+                <div class="card" style="margin-bottom: 32px;">
+                    <h2 class="card-title" style="text-align: center; justify-content: center;">
+                        <i class="fa-solid fa-trophy" style="color: var(--accent-yellow); background: #fef3c7;"></i>
+                        Why Choose Premium?
+                    </h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-top: 24px;">
+                        <div style="text-align: center; padding: 20px;">
+                            <div style="width: 64px; height: 64px; background: var(--teal-subtle); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: var(--teal-dark); font-size: 1.8rem;">
+                                <i class="fa-solid fa-infinity"></i>
+                            </div>
+                            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 8px;">One-Time Payment</h3>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">Pay once and enjoy lifetime access. No hidden fees or monthly subscriptions.</p>
+                        </div>
+                        <div style="text-align: center; padding: 20px;">
+                            <div style="width: 64px; height: 64px; background: var(--teal-subtle); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: var(--teal-dark); font-size: 1.8rem;">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                            </div>
+                            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 8px;">Enhanced Learning</h3>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">Master physics concepts faster with interactive simulations and expert guidance.</p>
+                        </div>
+                        <div style="text-align: center; padding: 20px;">
+                            <div style="width: 64px; height: 64px; background: var(--teal-subtle); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: var(--teal-dark); font-size: 1.8rem;">
+                                <i class="fa-solid fa-mobile-screen"></i>
+                            </div>
+                            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 8px;">Multi-Device Access</h3>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">Use on your phone, tablet, or computer. Learn anywhere, anytime.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -550,6 +510,5 @@
             }
         }
     </script>
-
 </body>
 </html>
