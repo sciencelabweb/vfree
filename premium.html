@@ -3,70 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScienceLab: Premium Lifetime Access (Rs 999)</title>
+    <title>Get Premium - Science Lab Pro</title>
+    
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
     <!-- External Stylesheet -->
     <link rel="stylesheet" href="style.css">
+    
     <style>
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 24px;
-            max-width: 850px;
-            margin: 0 auto;
+        .premium-hero {
+            background: linear-gradient(135deg, var(--teal-subtle) 0%, #ffffff 100%);
+            padding: 60px 20px;
+            text-align: center;
+            border-bottom: 2px dashed var(--teal-light);
         }
-        @media (min-width: 768px) {
-            .pricing-grid {
-                grid-template-columns: 1.2fr 1fr;
-            }
+        
+        .premium-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            animation: pulse 2s infinite;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
         }
-        .price-tag-box {
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .premium-title {
             font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--teal-dark);
-            margin: 15px 0;
-            display: flex;
-            align-items: baseline;
-            justify-content: center;
-            gap: 6px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 12px;
+            letter-spacing: -1px;
         }
-        .price-tag-box span {
-            font-size: 1rem;
+        
+        .premium-subtitle {
+            font-size: 1.1rem;
             color: var(--text-muted);
-            font-weight: 500;
+            margin-bottom: 40px;
         }
-        .feature-checklist {
-            list-style: none;
-            text-align: left;
-            margin: 20px 0;
-            display: flex;
-            flex-direction: column;
+        
+        .pricing-card {
+            max-width: 480px;
+            margin: -40px auto 60px auto;
+            background: #ffffff;
+            border: 3px solid var(--teal-light);
+            border-radius: 24px;
+            padding: 40px 32px;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pricing-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--teal-dark), var(--accent-yellow));
+        }
+        
+        .diamond-container {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .diamond-gif {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .old-price {
+            font-size: 1.5rem;
+            color: #9ca3af;
+            text-decoration: line-through;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .discount-badge {
+            display: inline-block;
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            border: 2px solid #fecaca;
+        }
+        
+        .new-price {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--teal-dark);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        
+        .new-price span {
+            font-size: 1.5rem;
+            vertical-align: super;
+        }
+        
+        .price-duration {
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+        
+        .buy-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--teal-dark), var(--teal-dark-hover));
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             gap: 12px;
+            box-shadow: 0 6px 20px rgba(23, 125, 129, 0.4);
+            text-decoration: none;
+            margin-bottom: 16px;
         }
-        .feature-checklist li {
+        
+        .buy-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(23, 125, 129, 0.5);
+        }
+        
+        .secure-badge {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 0.95rem;
-            color: var(--text-main);
+            justify-content: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
         }
-        .feature-checklist li i {
+        
+        .features-section {
+            max-width: 900px;
+            margin: 0 auto 60px auto;
+            padding: 0 20px;
+        }
+        
+        .features-title {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 40px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        
+        .feature-card {
+            background: #ffffff;
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--teal-dark);
+        }
+        
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--teal-subtle);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
             color: var(--teal-dark);
+            margin-bottom: 16px;
         }
-        .badge-pro {
-            background-color: #fef3c7;
-            color: #d97706;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
+        
+        .feature-title {
+            font-size: 1.1rem;
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-block;
-            margin-bottom: 10px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        
+        .feature-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .guarantee-box {
+            max-width: 600px;
+            margin: 40px auto;
+            background: linear-gradient(135deg, var(--teal-subtle), #ffffff);
+            border: 2px dashed var(--teal-light);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+        }
+        
+        .guarantee-icon {
+            font-size: 2.5rem;
+            color: var(--teal-dark);
+            margin-bottom: 16px;
+        }
+        
+        .guarantee-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        
+        .guarantee-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 600px) {
+            .premium-title {
+                font-size: 1.8rem;
+            }
+            
+            .new-price {
+                font-size: 2.5rem;
+            }
+            
+            .pricing-card {
+                padding: 32px 24px;
+                margin: -30px 16px 40px 16px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -88,8 +295,16 @@
                 </button>
             </div>
             <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="18.html" class="nav-item">
+                    <i class="fa-solid fa-ruler-combined"></i>
+                    <span>Vernier Caliper</span>
+                </a>
                 <a href="12.html" class="nav-item">
-                    <i class="fa-solid fa-microscope"></i>
+                    <i class="fa-solid fa-circle-dot"></i>
                     <span>Travelling Microscope</span>
                     <span class="menu-tag">Free</span>
                 </a>
@@ -98,7 +313,7 @@
                     <span>Micrometer Gauge</span>
                 </a>
                 <a href="11.html" class="nav-item">
-                    <i class="fa-solid fa-microscope"></i>
+                    <i class="fa-solid fa-compass-drafting"></i>
                     <span>Spherometer Lab</span>
                 </a>
                 <a href="2.html" class="nav-item">
@@ -131,11 +346,11 @@
                     <span>Helical Spring</span>
                 </a>
                 <a href="13.html" class="nav-item">
-                    <i class="fa-solid fa-wave-square"></i>
+                    <i class="fa-solid fa-guitar"></i>
                     <span>Sonometer Practical</span>
                 </a>
                 <a href="14.html" class="nav-item">
-                    <i class="fa-solid fa-wave-square"></i>
+                    <i class="fa-solid fa-tower-broadcast"></i>
                     <span>Resonance Tube Practical</span>
                 </a>
                 <a href="15.html" class="nav-item">
@@ -147,14 +362,22 @@
                     <i class="fa-solid fa-temperature-high"></i>
                     <span>Gas Law Simulator</span>
                 </a>
-                <!-- Active Premium link -->
-                <a href="premium.html" class="nav-item active">
-                    <i class="fa-solid fa-crown" style="color: var(--accent-yellow);"></i>
-                    <span>Go Premium (Rs 999)</span>
+                <a href="premium.html" class="nav-item active" style="color: #d97706; font-weight: 600;">
+                    <i class="fa-solid fa-crown" style="color: #f59e0b;"></i>
+                    <span>Get Premium</span>
+                    <span class="menu-tag" style="background:#fef3c7; color:#d97706;">Offer</span>
                 </a>
                 <a href="rate.html" class="nav-item">
                     <i class="fa-solid fa-star"></i>
-                    <span>Rate Our App</span>
+                    <span>Rate Us</span>
+                </a>
+                <a href="contact.html" class="nav-item">
+                    <i class="fa-solid fa-headset"></i>
+                    <span>Contact & FAQs</span>
+                </a>
+                <a href="developer.html" class="nav-item">
+                    <i class="fas fa-code"></i>
+                    <span>Developer</span>
                 </a>
             </nav>
         </aside>
@@ -169,79 +392,150 @@
                     </button>
                 </div>
                 <div class="header-title">
-                    <h1>ScienceLab Pro Access</h1>
+                    <h1>Premium Access</h1>
                 </div>
-                <div class="header-right"></div>
+                <div class="header-right">
+                    <a href="3s.html" class="lang-toggle-btn" title="Switch to Sinhala">
+                        <i class="fas fa-language"></i>
+                    </a>
+                </div>
             </header>
 
-            <!-- Main Content Area -->
-            <main class="content-body">
-                <div class="container pricing-grid">
-                     <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; text-align: center;">
-                        <div>
-                            <h2 class="card-title" style="justify-content: center;">
-                                <i class="fa-solid fa-bolt"></i> Lifetime License
-                            </h2>
-                            <div class="price-tag-box">
-                                Rs 999 <span>/ lifetime</span>
-                            </div>
-                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
-                                One-time payment. No recurring monthly or yearly subscription fees.
-                            </p>
-                        </div>
-
-                        <div>
-                            <button class="btn" onclick="t.me/learnyapp" style="background-color: var(--teal-dark); font-size: 1.05rem; padding: 14px;">
-                                <i class="fa-solid fa-lock"></i> Get Lifetime Access Now
-                            </button>
-                            <div style="margin-top: 12px; font-size: 0.75rem; color: var(--text-muted);">
-                                <i class="fa-solid fa-shield-halved"></i> Secured with SSL Instant Activation
-                            </div>
-                        </div>
+            <!-- Main Content -->
+            <main class="content-body" style="padding-top: 20px;">
+                
+                <!-- Hero Section -->
+                <div class="premium-hero">
+                    <div class="premium-badge">
+                        <i class="fa-solid fa-fire"></i>
+                        LIMITED TIME OFFER
                     </div>
-
-                    <!-- Left Column: Details & Benefits -->
-                    <div class="card">
-                        <span class="badge-pro">Ultimate Package</span>
-                        <h2 class="card-title">
-                            <i class="fa-solid fa-award"></i>
-                            Unlock All Labs & Pro Tools
-                        </h2>
-                        <p class="theory-text">
-                            Get complete, unrestricted access to all physics simulators, live calculation engines, and offline PDF export modules forever with a single one-time investment.
-                        </p>
-                        
-                        <ul class="feature-checklist">
-                            <li><i class="fa-solid fa-check-circle"></i> Unlocks all 15+ Advanced Physics Simulators</li>
-                            <li><i class="fa-solid fa-check-circle"></i> Professional PDF Report Generation & Data Export</li>
-                            <li><i class="fa-solid fa-check-circle"></i> Complete PWA offline accessibility via Chrome</li>
-                            <li><i class="fa-solid fa-check-circle"></i> Priority updates, new lab instruments, and bug fixes</li>
-                            <li><i class="fa-solid fa-check-circle"></i> Zero ads, completely distraction-free workspace</li>
-                        </ul>
-                    </div>
-
-                    <!-- Right Column: Checkout Box -->
-                   
+                    <h1 class="premium-title">Upgrade to Premium</h1>
+                    <p class="premium-subtitle">Unlock all features and take your learning to the next level</p>
                 </div>
+
+                <!-- Pricing Card -->
+                <div class="pricing-card">
+                    <div class="diamond-container">
+                        <img src="https://i.postimg.cc/mrWGRYD4/diamond-(1).gif" alt="Premium Diamond" class="diamond-gif">
+                    </div>
+                    
+                    <div class="old-price">Rs. 2,000</div>
+                    <div class="discount-badge">
+                        <i class="fa-solid fa-percent"></i> 51% OFF
+                    </div>
+                    <div class="new-price">
+                        <span>Rs.</span>999
+                    </div>
+                    <div class="price-duration">
+                        <i class="fa-solid fa-infinity"></i> Lifetime Access
+                    </div>
+                    
+                    <a href="https://t.me/learnyapp" target="_blank" class="buy-btn">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        Buy Now
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                    
+                    <div class="secure-badge">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        Secure Payment via Telegram
+                    </div>
+                </div>
+
+                <!-- Features Section -->
+                <div class="features-section">
+                    <h2 class="features-title">
+                        <i class="fa-solid fa-gem" style="color: var(--teal-dark);"></i>
+                        Premium Features
+                    </h2>
+                    
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fa-solid fa-lock-open"></i>
+                            </div>
+                            <div class="feature-title">Unlock All Simulators</div>
+                            <div class="feature-desc">Get unlimited access to all physics and science simulators without any restrictions.</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fa-solid fa-ban"></i>
+                            </div>
+                            <div class="feature-title">Ad-Free Experience</div>
+                            <div class="feature-desc">Enjoy a clean, distraction-free learning environment with zero advertisements.</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                            <div class="feature-title">Priority Access</div>
+                            <div class="feature-desc">Get early access to new features, simulators, and educational content before others.</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fa-solid fa-download"></i>
+                            </div>
+                            <div class="feature-title">Offline Mode</div>
+                            <div class="feature-desc">Download and use simulators offline without internet connection anytime.</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fa-solid fa-headset"></i>
+                            </div>
+                            <div class="feature-title">Priority Support</div>
+                            <div class="feature-desc">Get 24/7 priority customer support and quick resolution to your queries.</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fa-solid fa-infinity"></i>
+                            </div>
+                            <div class="feature-title">Lifetime Updates</div>
+                            <div class="feature-desc">Receive all future updates and new content absolutely free for lifetime.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guarantee Box -->
+                <div class="guarantee-box">
+                    <div class="guarantee-icon">
+                        <i class="fa-solid fa-certificate"></i>
+                    </div>
+                    <div class="guarantee-title">100% Satisfaction Guarantee</div>
+                    <div class="guarantee-text">
+                        We're confident you'll love Science Lab Pro. If you're not satisfied, 
+                        we offer a hassle-free refund within 7 days of purchase.
+                    </div>
+                </div>
+
             </main>
 
             <!-- Footer -->
             <footer class="footer">
                 <div class="footer-links-group">
-                    <a href="https://www.learny.study" target="_blank" rel="noopener noreferrer" class="footer-custom-link footer-learny">Learny App</a>
+                    <a href="https://www.learny.study" class="footer-custom-link footer-learny" target="_blank">
+                        <i class="fa-solid fa-graduation-cap"></i> Learny App
+                    </a>
                     <span style="color: var(--text-muted);">|</span>
-                    <a href="https://t.me/sciencepicco" target="_blank" rel="noopener noreferrer" class="footer-custom-link footer-science">Science Picco</a>
+                    <a href="https://t.me/sciencepiccoorg" class="footer-custom-link footer-science" target="_blank">
+                        <i class="fa-brands fa-telegram"></i> Science Picco
+                    </a>
                 </div>
                 <p>
                     Designed by 
-                    <a href="https://hexasolutions.online" target="_blank" rel="noopener noreferrer" class="footer-link">Hexa Solutions</a>
+                    <a href="https://hexasolutions.online" class="footer-link" target="_blank">Hexa Solutions</a>
                 </p>
             </footer>
         </div>
     </div>
 
-    <script src="menu.js"></script>
     <script>
+        // Sidebar Toggle Logic
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const mainWrapper = document.getElementById('mainWrapper');
@@ -256,5 +550,6 @@
             }
         }
     </script>
+
 </body>
 </html>
