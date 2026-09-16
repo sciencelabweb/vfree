@@ -240,16 +240,14 @@
         </a>
     </div>
             </header>
-<!-- Add this code to your index.html file -->
 
-<!-- Welcome Popup Modal -->
-<div id="welcomePopup" class="welcome-popup-overlay">
+<div id="welcomePopup" class="welcome-popup-overlay" style="display: none;">
     <div class="welcome-popup">
         <div class="popup-header">
             <img src="https://i.postimg.cc/hjtn3VML/classroom-lesson.gif" alt="ScienceLab Welcome" class="popup-image">
         </div>
         <div class="popup-content">
-            <h2 class="popup-title">Hello Student</h2>
+            <h2 class="popup-title">Welcome to ScienceLab!</h2>
             <p class="popup-message">Welcome to ScienceLab! Explore physics practicals with our interactive simulator.</p>
         </div>
         <div class="popup-actions">
@@ -293,9 +291,7 @@
     animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.popup-header {
-    margin-bottom: 8px;
-}
+.popup-header { margin-bottom: 8px; }
 
 .popup-image {
     width: 130px;
@@ -304,9 +300,7 @@
     object-fit: cover;
 }
 
-.popup-content {
-    margin-bottom: 24px;
-}
+.popup-content { margin-bottom: 24px; }
 
 .popup-title {
     font-size: 1.6rem;
@@ -323,9 +317,7 @@
     font-weight: 500;
 }
 
-.popup-actions {
-    margin-top: 8px;
-}
+.popup-actions { margin-top: 8px; }
 
 .continue-button {
     background: var(--teal-dark, #177D81);
@@ -349,9 +341,7 @@
     box-shadow: 0 6px 20px rgba(23, 125, 129, 0.4);
 }
 
-.continue-button i {
-    font-size: 0.95rem;
-}
+.continue-button i { font-size: 0.95rem; }
 
 .popup-footer-brand {
     margin-top: 28px;
@@ -379,82 +369,52 @@
 }
 
 @keyframes slideUp {
-    from { 
-        opacity: 0; 
-        transform: translateY(30px) scale(0.95); 
-    }
-    to { 
-        opacity: 1; 
-        transform: translateY(0) scale(1); 
-    }
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @media (max-width: 600px) {
-    .welcome-popup {
-        padding: 28px 20px;
-        max-width: 95%;
-    }
-    .popup-image {
-        width: 110px;
-    }
-    .popup-title {
-        font-size: 1.4rem;
-    }
-    .popup-message {
-        font-size: 0.95rem;
-    }
-    .continue-button {
-        padding: 12px 32px;
-        font-size: 1rem;
-        width: 100%;
-        justify-content: center;
-    }
+    .welcome-popup { padding: 28px 20px; max-width: 95%; }
+    .popup-image { width: 110px; }
+    .popup-title { font-size: 1.4rem; }
+    .popup-message { font-size: 0.95rem; }
+    .continue-button { padding: 12px 32px; font-size: 1rem; width: 100%; justify-content: center; }
 }
 </style>
 
-<!-- Popup Logic -->
+<!-- Popup Logic (First Visit Only) -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if user has visited before
+    // 1. Check if the user has EVER visited before
     const hasVisited = localStorage.getItem('scienceLabVisited');
     
+    // 2. If NOT in localStorage, show the popup
     if (!hasVisited) {
-        showWelcomePopup();
-    }
-
-    const continueBtn = document.getElementById('continueBtn');
-    if (continueBtn) {
-        continueBtn.addEventListener('click', async function() {
-            // Mark as visited so it doesn't show again
-            localStorage.setItem('scienceLabVisited', 'true');
-            
-            // Notify Telegram bot
-            await notifyTelegramBot();
-            
-            // Hide popup smoothly
-            hideWelcomePopup();
-        });
-    }
-});
-
-function showWelcomePopup() {
-    const popup = document.getElementById('welcomePopup');
-    if (popup) {
+        const popup = document.getElementById('welcomePopup');
         popup.style.display = 'flex';
         document.body.style.overflow = 'hidden'; // Prevent background scrolling
     }
-}
 
-function hideWelcomePopup() {
-    const popup = document.getElementById('welcomePopup');
-    if (popup) {
-        popup.style.animation = 'fadeIn 0.3s ease reverse';
-        setTimeout(() => {
-            popup.style.display = 'none';
-            document.body.style.overflow = 'auto'; // Restore scrolling
-        }, 300);
+    // 3. Handle Continue Button Click
+    const continueBtn = document.getElementById('continueBtn');
+    if (continueBtn) {
+        continueBtn.addEventListener('click', async function() {
+            // Mark as visited PERMANENTLY in this browser
+            localStorage.setItem('scienceLabVisited', 'true');
+            
+            // Notify your Telegram bot
+            await notifyTelegramBot();
+            
+            // Smoothly hide the popup
+            const popup = document.getElementById('welcomePopup');
+            popup.style.animation = 'fadeIn 0.3s ease reverse';
+            setTimeout(() => {
+                popup.style.display = 'none';
+                document.body.style.overflow = 'auto'; // Restore scrolling
+            }, 300);
+        });
     }
-}
+});
 
 // Function to get user's IP address
 async function getUserIP() {
@@ -463,7 +423,6 @@ async function getUserIP() {
         const data = await response.json();
         return data.ip;
     } catch (error) {
-        console.error('Error fetching IP:', error);
         return 'Unknown';
     }
 }
@@ -477,12 +436,8 @@ async function notifyTelegramBot() {
         const ip = await getUserIP();
         const now = new Date();
         const time = now.toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
+            year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
             timeZoneName: 'short'
         });
         
@@ -496,19 +451,15 @@ async function notifyTelegramBot() {
         
         await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 chat_id: chatId,
                 text: message,
                 parse_mode: 'Markdown'
             })
         });
-        
-        console.log('Telegram notification sent successfully');
     } catch (error) {
-        console.error('Error sending Telegram notification:', error);
+        console.error('Telegram notification error:', error);
     }
 }
 </script>
