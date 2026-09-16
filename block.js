@@ -8,7 +8,7 @@
 
     /* ---------- 1. ROBUST URL MATCHING ---------- */
     const pathname = window.location.pathname;
-    const lockedIdentifiers = ['10', '11', '18', '12', '2', '3', '4', '5', '6', '7', '8', '13', '14', '15', '16'];
+    const lockedIdentifiers = ['10', '10s', '11', '18', '12', '2', '3', '4', '5', '6', '7', '8', '13', '14', '15', '16'];
     
     const isLocked = lockedIdentifiers.some(id => 
         pathname.endsWith(id) || 
