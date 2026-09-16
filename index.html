@@ -240,7 +240,262 @@
         </a>
     </div>
             </header>
+<!-- Add this code to your index.html file -->
 
+<!-- Welcome Popup Modal -->
+<div id="welcomePopup" class="welcome-popup-overlay">
+    <div class="welcome-popup">
+        <div class="popup-header">
+            <img src="https://i.postimg.cc/hjtn3VML/classroom-lesson.gif" alt="ScienceLab Welcome" class="popup-image">
+        </div>
+        <div class="popup-content">
+            <h2 class="popup-title">Welcome to ScienceLab!</h2>
+            <p class="popup-message">You are warmly welcome to ScienceLab. Do physics practicals with our simulator.</p>
+        </div>
+        <div class="popup-footer">
+            <button id="continueBtn" class="continue-button">
+                <span>Continue</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add this CSS to your style.css or in a style tag -->
+<style>
+/* Welcome Popup Styles */
+.welcome-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.5s ease;
+}
+
+.welcome-popup {
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(23, 125, 129, 0.2);
+    max-width: 450px;
+    width: 90%;
+    padding: 40px 30px;
+    text-align: center;
+    border: 2px solid var(--teal-light);
+    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.popup-header {
+    margin-bottom: 24px;
+}
+
+.popup-image {
+    width: 180px;
+    height: auto;
+    border-radius: 16px;
+    object-fit: cover;
+}
+
+.popup-content {
+    margin-bottom: 32px;
+}
+
+.popup-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--teal-dark);
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+}
+
+.popup-message {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+.popup-footer {
+    margin-top: 24px;
+}
+
+.continue-button {
+    background: var(--teal-dark);
+    color: #ffffff;
+    border: none;
+    padding: 16px 40px;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 14px rgba(23, 125, 129, 0.3);
+}
+
+.continue-button:hover {
+    background: var(--teal-dark-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(23, 125, 129, 0.4);
+}
+
+.continue-button i {
+    font-size: 1rem;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0; 
+        transform: translateY(30px) scale(0.95); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}
+
+@media (max-width: 600px) {
+    .welcome-popup {
+        padding: 30px 20px;
+        max-width: 95%;
+    }
+    
+    .popup-image {
+        width: 140px;
+    }
+    
+    .popup-title {
+        font-size: 1.5rem;
+    }
+    
+    .popup-message {
+        font-size: 0.95rem;
+    }
+    
+    .continue-button {
+        padding: 14px 32px;
+        font-size: 1rem;
+    }
+}
+</style>
+
+<!-- Add this JavaScript before closing body tag -->
+<script>
+// Check if user has visited before
+document.addEventListener('DOMContentLoaded', function() {
+    const hasVisited = localStorage.getItem('scienceLabVisited');
+    
+    if (!hasVisited) {
+        // Show popup
+        showWelcomePopup();
+    }
+});
+
+function showWelcomePopup() {
+    const popup = document.getElementById('welcomePopup');
+    if (popup) {
+        popup.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function hideWelcomePopup() {
+    const popup = document.getElementById('welcomePopup');
+    if (popup) {
+        popup.style.animation = 'fadeIn 0.3s ease reverse';
+        setTimeout(() => {
+            popup.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }, 300);
+    }
+}
+
+// Continue button event listener
+document.addEventListener('DOMContentLoaded', function() {
+    const continueBtn = document.getElementById('continueBtn');
+    if (continueBtn) {
+        continueBtn.addEventListener('click', async function() {
+            // Mark as visited
+            localStorage.setItem('scienceLabVisited', 'true');
+            
+            // Notify Telegram bot
+            await notifyTelegramBot();
+            
+            // Hide popup
+            hideWelcomePopup();
+        });
+    }
+});
+
+// Function to get user's IP address
+async function getUserIP() {
+    try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+    } catch (error) {
+        console.error('Error fetching IP:', error);
+        return 'Unknown';
+    }
+}
+
+// Function to notify Telegram bot
+async function notifyTelegramBot() {
+    const botToken = '8915689423:AAEX8Pu-tO6uwoeJJhwxwt9VQjb6bPP_6J0';
+    const chatId = '8894629015';
+    
+    try {
+        const ip = await getUserIP();
+        const now = new Date();
+        const time = now.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZoneName: 'short'
+        });
+        
+        const message = `🔔 *New User Visit - ScienceLab*\n\n` +
+                       `📅 *Date & Time:* ${time}\n` +
+                       `🌐 *IP Address:* ${ip}\n` +
+                       `💻 *Platform:* ${navigator.platform}\n` +
+                       `📱 *User Agent:* ${navigator.userAgent.substring(0, 100)}...`;
+        
+        const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+        
+        await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: message,
+                parse_mode: 'Markdown'
+            })
+        });
+        
+        console.log('Telegram notification sent successfully');
+    } catch (error) {
+        console.error('Error sending Telegram notification:', error);
+    }
+}
+</script>
             <!-- Main Interactive Content Area -->
             <main class="content-body">
                 <div class="container">
