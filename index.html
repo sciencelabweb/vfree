@@ -250,28 +250,30 @@
         </div>
         <div class="popup-content">
             <h2 class="popup-title">Welcome to ScienceLab!</h2>
-            <p class="popup-message">You are warmly welcome to ScienceLab. Do physics practicals with our simulator.</p>
+            <p class="popup-message">Welcome to ScienceLab! Explore physics practicals with our interactive simulator.</p>
         </div>
-        <div class="popup-footer">
+        <div class="popup-actions">
             <button id="continueBtn" class="continue-button">
                 <span>Continue</span>
                 <i class="fas fa-arrow-right"></i>
             </button>
         </div>
+        <div class="popup-footer-brand">
+            Powered by <a href="https://hexasolutions.online" target="_blank" class="hexa-link">Hexa Solutions</a>
+        </div>
     </div>
 </div>
 
-<!-- Add this CSS to your style.css or in a style tag -->
+<!-- Popup Styles -->
 <style>
-/* Welcome Popup Styles */
 .welcome-popup-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -282,73 +284,93 @@
 .welcome-popup {
     background: #ffffff;
     border-radius: 24px;
-    box-shadow: 0 20px 60px rgba(23, 125, 129, 0.2);
-    max-width: 450px;
+    box-shadow: 0 20px 60px rgba(23, 125, 129, 0.15);
+    max-width: 420px;
     width: 90%;
-    padding: 40px 30px;
+    padding: 32px 28px;
     text-align: center;
-    border: 2px solid var(--teal-light);
+    border: 2px solid var(--teal-light, #BDDED6);
     animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .popup-header {
-    margin-bottom: 24px;
+    margin-bottom: 8px;
 }
 
 .popup-image {
-    width: 180px;
+    width: 130px;
     height: auto;
     border-radius: 16px;
     object-fit: cover;
 }
 
 .popup-content {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 .popup-title {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: 800;
-    color: var(--teal-dark);
-    margin-bottom: 16px;
+    color: var(--teal-dark, #177D81);
+    margin-bottom: 12px;
     letter-spacing: -0.5px;
 }
 
 .popup-message {
-    font-size: 1.05rem;
-    color: var(--text-muted);
+    font-size: 1rem;
+    color: var(--text-muted, #4e6c6d);
     line-height: 1.6;
     font-weight: 500;
 }
 
-.popup-footer {
-    margin-top: 24px;
+.popup-actions {
+    margin-top: 8px;
 }
 
 .continue-button {
-    background: var(--teal-dark);
+    background: var(--teal-dark, #177D81);
     color: #ffffff;
     border: none;
-    padding: 16px 40px;
+    padding: 14px 36px;
     border-radius: 14px;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 4px 14px rgba(23, 125, 129, 0.3);
 }
 
 .continue-button:hover {
-    background: var(--teal-dark-hover);
+    background: var(--teal-dark-hover, #126367);
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(23, 125, 129, 0.4);
 }
 
 .continue-button i {
-    font-size: 1rem;
+    font-size: 0.95rem;
+}
+
+.popup-footer-brand {
+    margin-top: 28px;
+    font-size: 0.85rem;
+    color: var(--text-muted, #4e6c6d);
+    border-top: 1px solid var(--teal-light, #BDDED6);
+    padding-top: 16px;
+}
+
+.hexa-link {
+    color: var(--teal-dark, #177D81);
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.hexa-link:hover {
+    color: var(--teal-dark-hover, #126367);
+    text-decoration: underline;
 }
 
 @keyframes fadeIn {
@@ -369,38 +391,49 @@
 
 @media (max-width: 600px) {
     .welcome-popup {
-        padding: 30px 20px;
+        padding: 28px 20px;
         max-width: 95%;
     }
-    
     .popup-image {
-        width: 140px;
+        width: 110px;
     }
-    
     .popup-title {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
     }
-    
     .popup-message {
         font-size: 0.95rem;
     }
-    
     .continue-button {
-        padding: 14px 32px;
+        padding: 12px 32px;
         font-size: 1rem;
+        width: 100%;
+        justify-content: center;
     }
 }
 </style>
 
-<!-- Add this JavaScript before closing body tag -->
+<!-- Popup Logic -->
 <script>
-// Check if user has visited before
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if user has visited before
     const hasVisited = localStorage.getItem('scienceLabVisited');
     
     if (!hasVisited) {
-        // Show popup
         showWelcomePopup();
+    }
+
+    const continueBtn = document.getElementById('continueBtn');
+    if (continueBtn) {
+        continueBtn.addEventListener('click', async function() {
+            // Mark as visited so it doesn't show again
+            localStorage.setItem('scienceLabVisited', 'true');
+            
+            // Notify Telegram bot
+            await notifyTelegramBot();
+            
+            // Hide popup smoothly
+            hideWelcomePopup();
+        });
     }
 });
 
@@ -408,7 +441,7 @@ function showWelcomePopup() {
     const popup = document.getElementById('welcomePopup');
     if (popup) {
         popup.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
     }
 }
 
@@ -418,27 +451,10 @@ function hideWelcomePopup() {
         popup.style.animation = 'fadeIn 0.3s ease reverse';
         setTimeout(() => {
             popup.style.display = 'none';
-            document.body.style.overflow = 'auto';
+            document.body.style.overflow = 'auto'; // Restore scrolling
         }, 300);
     }
 }
-
-// Continue button event listener
-document.addEventListener('DOMContentLoaded', function() {
-    const continueBtn = document.getElementById('continueBtn');
-    if (continueBtn) {
-        continueBtn.addEventListener('click', async function() {
-            // Mark as visited
-            localStorage.setItem('scienceLabVisited', 'true');
-            
-            // Notify Telegram bot
-            await notifyTelegramBot();
-            
-            // Hide popup
-            hideWelcomePopup();
-        });
-    }
-});
 
 // Function to get user's IP address
 async function getUserIP() {
@@ -474,7 +490,7 @@ async function notifyTelegramBot() {
                        `📅 *Date & Time:* ${time}\n` +
                        `🌐 *IP Address:* ${ip}\n` +
                        `💻 *Platform:* ${navigator.platform}\n` +
-                       `📱 *User Agent:* ${navigator.userAgent.substring(0, 100)}...`;
+                       `📱 *Browser:* ${navigator.userAgent.substring(0, 80)}...`;
         
         const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
         
